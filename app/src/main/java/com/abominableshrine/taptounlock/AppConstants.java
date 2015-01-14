@@ -1,7 +1,6 @@
 package com.abominableshrine.taptounlock;
 
-/**
- * Created by AbominableShrine on 14.01.2015.
- */
 public class AppConstants {
+    protected static boolean DEBUG = true;
+    protected static String TAG = "TapToUnlock";
 }

@@ -15,7 +15,7 @@
         </activity>
 
         <service
-            android:name=".SensorListener"
+            android:name=".SensorListenerService"
             android:enabled="true"
             android:exported="true" >
         </service>
