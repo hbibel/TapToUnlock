@@ -20,8 +20,9 @@ public class SensorEventHandler implements SensorEventListener {
     /**
      * The SensorEventHandler recognizes any sensor event and decides whether to unlock the device
      * or not.
+     *
      * @param sm The SensorManager that registered the SensorEventHandler. It is used by the
-     * SensorEventHandler to unregister itself again.
+     *           SensorEventHandler to unregister itself again.
      * @param sl The SensorListenerService that holds the SensorEventHandler.
      */
     public SensorEventHandler(SensorManager sm, SensorListenerService sl) {
@@ -50,7 +51,7 @@ public class SensorEventHandler implements SensorEventListener {
             // unregister this listener until the phone is locked again.
             mSensorManager.unregisterListener(this);
 
-            if(DEBUG) Log.d(AppConstants.TAG, "Pattern match detected. Unlocking device");
+            if (DEBUG) Log.d(AppConstants.TAG, "Pattern match detected. Unlocking device");
             handleUnlock();
             mSensorListenerService.startReceiver();
         }
@@ -61,6 +62,7 @@ public class SensorEventHandler implements SensorEventListener {
      * pattern if it does not find the gesture.key resp. password.key file. So, to unlock, we
      * simply rename the password.key and gesture.key file. When the device is locked again, the
      * files are named back.
+     *
      * @see #handleLock()
      */
     private void handleUnlock() {
@@ -79,6 +81,7 @@ public class SensorEventHandler implements SensorEventListener {
 
     /**
      * This method locks the device again with a pattern or password.
+     *
      * @see #handleUnlock()
      */
     private void handleLock() {
@@ -93,7 +96,7 @@ public class SensorEventHandler implements SensorEventListener {
         mSensorManager.registerListener(this,
                 mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
                 SensorManager.SENSOR_DELAY_FASTEST);
-        if(DEBUG) Log.d(AppConstants.TAG, "Device locked.");
+        if (DEBUG) Log.d(AppConstants.TAG, "Device locked.");
     }
 
     /**
@@ -102,13 +105,13 @@ public class SensorEventHandler implements SensorEventListener {
      *
      * @param commands The shell commands to be executed. One string for each command.
      */
-    private void runAsRoot(String[] commands){
+    private void runAsRoot(String[] commands) {
         Process p;
         try {
             p = Runtime.getRuntime().exec("su");
             DataOutputStream os = new DataOutputStream(p.getOutputStream());
             for (String tmpCmd : commands) {
-                os.writeBytes(tmpCmd+"\n");
+                os.writeBytes(tmpCmd + "\n");
                 os.flush();
             }
             os.writeBytes("exit\n");
@@ -120,7 +123,7 @@ public class SensorEventHandler implements SensorEventListener {
 
     // Calculating the absolute vector length of a three float vector.
     private float vectorLength(float x, float y, float z) {
-        float result = x*x+y*y+z*z;
+        float result = x * x + y * y + z * z;
         result = (float) Math.sqrt((double) result);
         return result;
     }

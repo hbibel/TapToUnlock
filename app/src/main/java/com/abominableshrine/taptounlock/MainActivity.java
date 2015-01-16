@@ -1,8 +1,8 @@
 package com.abominableshrine.taptounlock;
 
 import android.content.Intent;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -21,7 +21,7 @@ public class MainActivity extends ActionBarActivity {
         DEBUG = AppConstants.DEBUG;
         setContentView(R.layout.activity_main);
 
-        if(DEBUG) Log.d(AppConstants.TAG, "MainActivity created. Debug mode enabled.");
+        if (DEBUG) Log.d(AppConstants.TAG, "MainActivity created. Debug mode enabled.");
 
         // Initialize the button that toggles the service on or off
         serviceStatus = (TextView) findViewById(R.id.service_status);
@@ -37,18 +37,15 @@ public class MainActivity extends ActionBarActivity {
                         try {
                             if (DEBUG) Log.d(AppConstants.TAG, "Stopping SensorListenerService.");
                             stopService(sensorReadingServiceIntent);
-                        }
-                        catch (SecurityException e) {
+                        } catch (SecurityException e) {
                             Log.e(AppConstants.TAG, "You don't have the permission to stop the service!");
                         }
                         startStopServiceButton.setText(R.string.start_service);
                         serviceStatus.setText(R.string.service_not_running);
-                    }
-                    else {
+                    } else {
                         try {
                             startService(sensorReadingServiceIntent);
-                        }
-                        catch (SecurityException e) {
+                        } catch (SecurityException e) {
                             Log.e(AppConstants.TAG, "You don't have the permission to start the service!");
                         }
                         startStopServiceButton.setText(R.string.stop_service);
