@@ -45,7 +45,7 @@ public class SensorListenerService extends Service {
         screenOffFilter.addAction(Intent.ACTION_SCREEN_OFF);
         registerReceiver(mScreenOffBroadcastReceiver, screenOffFilter);
 
-        setRunning();
+        running = Boolean.TRUE;
         return START_STICKY;
     }
 
@@ -55,16 +55,8 @@ public class SensorListenerService extends Service {
         SensorEventHandler.lockDevice();
         mSensorManager.unregisterListener(mSensorEventHandler);
         unregisterReceiver(mScreenOffBroadcastReceiver);
-        setNotRunning();
-        super.onDestroy();
-    }
-
-    public static void setRunning() {
-        running = Boolean.TRUE;
-    }
-
-    public static void setNotRunning() {
         running = Boolean.FALSE;
+        super.onDestroy();
     }
 
     public static boolean isRunning() {
