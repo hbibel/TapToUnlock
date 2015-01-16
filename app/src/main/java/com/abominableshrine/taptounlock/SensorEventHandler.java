@@ -5,10 +5,6 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.util.Log;
-import android.view.KeyEvent;
-
-import java.io.DataOutputStream;
-import java.io.IOException;
 
 /*  */
 public class SensorEventHandler implements SensorEventListener {
@@ -51,74 +47,19 @@ public class SensorEventHandler implements SensorEventListener {
             // unregister this listener until the phone is locked again.
             mSensorManager.unregisterListener(this);
 
-            if (DEBUG) Log.d(AppConstants.TAG, "Pattern match detected. Unlocking device");
-            handleUnlock();
+            if (DEBUG) Log.d(AppConstants.TAG, "Pattern match detected.");
+            ShellUnlocker.unlock();
             mSensorListenerService.startReceiver();
         }
     }
 
-    /**
-     * If the device is locked by pattern or password, the Keyguard will accept any password or
-     * pattern if it does not find the gesture.key resp. password.key file. So, to unlock, we
-     * simply rename the password.key and gesture.key file. When the device is locked again, the
-     * files are named back.
-     *
-     * @see #handleLock()
-     */
-    private void handleUnlock() {
-        String[] shellCommands = {
-                "cd /data/system",
-                "mv password.key passwordtemp.key",
-                "mv gesture.key gesturetemp.key",
-                "input keyevent " + Integer.toString(KeyEvent.KEYCODE_POWER)
-        };
-        runAsRoot(shellCommands);
-    }
-
     protected static void lockDevice() {
-        instance.handleLock();
-    }
-
-    /**
-     * This method locks the device again with a pattern or password.
-     *
-     * @see #handleUnlock()
-     */
-    private void handleLock() {
-        String[] shellCommands = {
-                "cd /data/system",
-                "mv passwordtemp.key password.key",
-                "mv gesturetemp.key gesture.key"
-        };
-        runAsRoot(shellCommands);
+        ShellUnlocker.lock();
 
         // After locking, start listening for unlock events again.
-        mSensorManager.registerListener(this,
-                mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+        instance.mSensorManager.registerListener(instance,
+                instance.mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
                 SensorManager.SENSOR_DELAY_FASTEST);
-        if (DEBUG) Log.d(AppConstants.TAG, "Device locked.");
-    }
-
-    /**
-     * This method takes a series of shell commands and executes them as superuser.
-     * Thanks to http://stackoverflow.com/questions/6882248/running-shell-commands-though-java-code-on-android
-     *
-     * @param commands The shell commands to be executed. One string for each command.
-     */
-    private void runAsRoot(String[] commands) {
-        Process p;
-        try {
-            p = Runtime.getRuntime().exec("su");
-            DataOutputStream os = new DataOutputStream(p.getOutputStream());
-            for (String tmpCmd : commands) {
-                os.writeBytes(tmpCmd + "\n");
-                os.flush();
-            }
-            os.writeBytes("exit\n");
-            os.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     // Calculating the absolute vector length of a three float vector.
