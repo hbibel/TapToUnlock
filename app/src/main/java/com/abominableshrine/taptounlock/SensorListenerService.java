@@ -17,7 +17,7 @@ public class SensorListenerService extends Service {
     private SensorEventHandler mSensorEventHandler;
     private static Boolean running; // Boolean class to enable check for null
     private IntentFilter screenOffFilter;
-    private static ScreenOffBroadcastReceiver mScreenOffBroadcastReceiver ;
+    private static ScreenOffBroadcastReceiver mScreenOffBroadcastReceiver;
 
     public SensorListenerService() {
         DEBUG = AppConstants.DEBUG;
@@ -51,7 +51,7 @@ public class SensorListenerService extends Service {
 
     @Override
     public void onDestroy() {
-        if(DEBUG) Log.d(AppConstants.TAG, "SensorListenerService is being destroyed");
+        if (DEBUG) Log.d(AppConstants.TAG, "SensorListenerService is being destroyed");
         SensorEventHandler.lockDevice();
         mSensorManager.unregisterListener(mSensorEventHandler);
         unregisterReceiver(mScreenOffBroadcastReceiver);
@@ -68,9 +68,9 @@ public class SensorListenerService extends Service {
     public static class ScreenOffBroadcastReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if(intent.getAction().equals(Intent.ACTION_SCREEN_OFF)){
+            if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
                 if (!SensorListenerService.isRunning()) {
-                    if(DEBUG) Log.d(AppConstants.TAG, "Screen is turned off but the " +
+                    if (DEBUG) Log.d(AppConstants.TAG, "Screen is turned off but the " +
                             "SensorListenerService is not running. Aborting.");
                     return;
                 }
@@ -80,11 +80,11 @@ public class SensorListenerService extends Service {
         }
     }
 
-    public void stopReceiver () {
+    public void stopReceiver() {
         unregisterReceiver(mScreenOffBroadcastReceiver);
     }
 
-    public void startReceiver () {
+    public void startReceiver() {
         registerReceiver(mScreenOffBroadcastReceiver, screenOffFilter);
     }
 }
