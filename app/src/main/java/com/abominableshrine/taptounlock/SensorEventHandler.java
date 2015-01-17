@@ -48,13 +48,13 @@ public class SensorEventHandler implements SensorEventListener {
             mSensorManager.unregisterListener(this);
 
             if (DEBUG) Log.d(AppConstants.TAG, "Pattern match detected.");
-            ShellUnlocker.unlock();
+            // ShellUnlocker.unlock();
             mSensorListenerService.startReceiver();
         }
     }
 
     protected static void lockDevice() {
-        ShellUnlocker.lock();
+        // ShellUnlocker.lock();
 
         // After locking, start listening for unlock events again.
         instance.mSensorManager.registerListener(instance,

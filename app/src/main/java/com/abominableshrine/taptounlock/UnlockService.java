@@ -1,5 +1,11 @@
 package com.abominableshrine.taptounlock;
 
+import android.app.Service;
+import android.content.Intent;
+import android.os.Handler;
+import android.os.IBinder;
+import android.os.Message;
+import android.os.Messenger;
 import android.util.Log;
 import android.view.KeyEvent;
 
@@ -7,17 +13,49 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 /**
- * Lock and Unlock the device based on series of shell command executed as Root
+ * The Service that can lock and unlock the device. It does so if it receives a message from
+ * a client that tells it to do so.
+ * As of now, it can not respond to the client.
  */
-class ShellUnlocker {
-    private static boolean DEBUG = AppConstants.DEBUG;
+public class UnlockService extends Service {
+    private final static Boolean DEBUG = AppConstants.DEBUG;
+    private Messenger mMessenger = new Messenger (new MessageHandler());
+
+    protected static final int MSG_UNLOCK = 1;
+    protected static final int MSG_LOCK = 2;
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        return START_STICKY;
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        return mMessenger.getBinder();
+    }
+
+    class MessageHandler extends Handler {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case MSG_UNLOCK:
+                    unlock();
+                    break;
+                case MSG_LOCK:
+                    lock();
+                    break;
+                default:
+                    super.handleMessage(msg);
+            }
+        }
+    }
 
     /**
      * This method locks the device again with a pattern or password.
      *
      * @see #unlock()
      */
-    static void lock() {
+    private static void lock() {
         String[] shellCommands = {
                 "cd /data/system",
                 "mv passwordtemp.key password.key",
@@ -35,7 +73,7 @@ class ShellUnlocker {
      *
      * @see #lock()
      */
-    static void unlock() {
+    private static void unlock() {
         String[] shellCommands = {
                 "cd /data/system",
                 "mv password.key passwordtemp.key",
