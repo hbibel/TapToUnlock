@@ -6,6 +6,16 @@ import java.util.ArrayList;
 
 /**
  * Describing a tap pattern
+ * <p/>
+ * A tap pattern will be described by the side that has been tapped and the interval between two
+ * taps.
+ * <p/>
+ * Facts like the force of the tap or the position of the tap on the side will not be
+ * considered by this model.
+ * <p/>
+ * This class can be easily sent via Messenger to remote services as it provides convenient methods
+ * to be bundled and extracted from a bundle. See {@link #toBundle()} and
+ * {@link #TapPattern(android.os.Bundle)}
  */
 public class TapPattern {
 
