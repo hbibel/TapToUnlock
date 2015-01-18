@@ -6,6 +6,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
+import android.os.RemoteException;
 import android.util.Log;
 
 public class TapPatternDetectorService extends Service {
@@ -92,10 +93,16 @@ public class TapPatternDetectorService extends Service {
     class TapObserverHandler extends Handler {
         @Override
         public void handleMessage(Message msg) {
-            Log.d(AppConstants.TAG, "Got Message");
             switch (msg.what) {
                 case MSG_REQ_RECENT_TAPS:
-                    Log.d(AppConstants.TAG, "Got recent taps request");
+                    try {
+                        Message reply = Message.obtain();
+                        reply.setData(new TapPattern().toBundle());
+                        reply.what = MSG_RESP_RECENT_TAPS;
+                        msg.replyTo.send(reply);
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    }
                     break;
                 default:
                     super.handleMessage(msg);
