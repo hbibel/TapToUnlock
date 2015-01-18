@@ -6,21 +6,27 @@ import junit.framework.TestCase;
 
 public class TapPatternTest extends TestCase {
 
+    private TapPattern p;
+
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        p = new TapPattern();
+    }
+
     public void testEmptyPatternSizeDuration() {
-        TapPattern p = new TapPattern();
         assertEquals(0, p.size());
         assertEquals(0, p.duration());
     }
 
     public void testSingleTapPatternDuration() {
-        TapPattern p = new TapPattern();
         assertNotNull(p.appendTap(TapPattern.DeviceSide.BACK, 10));
         assertEquals(1, p.size());
         assertEquals(0, p.duration());
     }
 
     public void testNullOnNegativeDuration() {
-        TapPattern p = new TapPattern().appendTap(TapPattern.DeviceSide.TOP, 10);
+        p.appendTap(TapPattern.DeviceSide.TOP, 10);
         assertNull(p.appendTap(TapPattern.DeviceSide.FRONT, -1));
     }
 
@@ -30,7 +36,6 @@ public class TapPatternTest extends TestCase {
     }
 
     public void testNullOnZeroDuration() {
-        TapPattern p = new TapPattern();
         TapPattern p1 = p.appendTap(TapPattern.DeviceSide.LEFT, 10);
         assertNotNull(p1);
         assertNull(p1.appendTap(TapPattern.DeviceSide.FRONT, 0));
@@ -43,7 +48,6 @@ public class TapPatternTest extends TestCase {
     }
 
     public void testSizeDurationLongPattern() {
-        TapPattern p = new TapPattern();
         fillComplexPattern(p);
         assertEquals(3, p.size());
         assertEquals(20, p.duration());
@@ -63,16 +67,25 @@ public class TapPatternTest extends TestCase {
 
     public void testEqualComplexPattern() {
         TapPattern p1 = new TapPattern();
-        TapPattern p2 = new TapPattern();
+        fillComplexPattern(p);
         fillComplexPattern(p1);
-        fillComplexPattern(p2);
-        assertEquals(p1, p2);
+        assertEquals(p1, p);
     }
 
     public void testBundleRoundTrip() {
-        TapPattern p1 = new TapPattern();
-        fillComplexPattern(p1);
-        Bundle b = p1.toBundle();
-        assertEquals(p1, new TapPattern(b));
+        fillComplexPattern(p);
+        Bundle b = p.toBundle();
+        assertEquals(p, new TapPattern(b));
+    }
+
+    public void testEmptyBundleRoundTrip() {
+        Bundle b = p.toBundle();
+        assertEquals(p, new TapPattern(b));
+    }
+
+    public void testSingleTapBundleRoundTrip() {
+        p.appendTap(TapPattern.DeviceSide.BACK, 10);
+        Bundle b = p.toBundle();
+        assertEquals(p, new TapPattern(b));
     }
 }
