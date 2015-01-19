@@ -1,17 +1,13 @@
 package com.abominableshrine.taptounlock;
 
 import android.app.Service;
-import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
-import android.widget.Toast;
 
 public class TapPatternDetectorService extends Service {
 
@@ -28,7 +24,6 @@ public class TapPatternDetectorService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        Toast.makeText(getApplicationContext(), "binding", Toast.LENGTH_SHORT).show();
         return mMessenger.getBinder();
     }
 
@@ -40,6 +35,11 @@ public class TapPatternDetectorService extends Service {
         public void handleMessage(Message msg) {
             // We have not defined any messages from the UnlockService to this yet
             switch (msg.what) {
+                case MSG_UNLOCK:
+                    String pattern = msg.getData().getString("Pattern"); // Keep in mind that this does not have to be a string!
+                    // You might want to store the msg object, so you can reply later
+                    if (DEBUG) Log.d(AppConstants.TAG, "received the following message: (MSG_UNLOCK, " + pattern + ")");
+                    break;
                 default:
                     super.handleMessage(msg);
             }
@@ -62,32 +62,10 @@ public class TapPatternDetectorService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        bindService(new Intent(this, UnlockService.class), mUnlockServiceConnection, Context.BIND_AUTO_CREATE);
+
 
         return START_STICKY;
     }
-
-    @Override
-    public void onDestroy() {
-        // Unbind from the service
-        if (mBound) {
-            unbindService(mUnlockServiceConnection);
-            mBound = false;
-        }
-        super.onDestroy();
-    }
-
-    private ServiceConnection mUnlockServiceConnection = new ServiceConnection() {
-        public void onServiceConnected(ComponentName className, IBinder service) {
-            mUnlockServiceMessenger = new Messenger(service);
-            mBound = true;
-        }
-
-        public void onServiceDisconnected(ComponentName className) {
-            mUnlockServiceMessenger = null;
-            mBound = false;
-        }
-    };
 
 
 }

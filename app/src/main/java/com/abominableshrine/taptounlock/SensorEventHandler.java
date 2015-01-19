@@ -10,7 +10,6 @@ import android.util.Log;
 public class SensorEventHandler implements SensorEventListener {
     private static boolean DEBUG;
     private SensorManager mSensorManager;
-    private SensorListenerService mSensorListenerService;
     private static SensorEventHandler instance;
 
     /**
@@ -24,7 +23,6 @@ public class SensorEventHandler implements SensorEventListener {
     public SensorEventHandler(SensorManager sm, SensorListenerService sl) {
         DEBUG = AppConstants.DEBUG;
         mSensorManager = sm;
-        mSensorListenerService = sl;
         instance = this;
     }
 
@@ -38,18 +36,11 @@ public class SensorEventHandler implements SensorEventListener {
         // This is where the pattern analysis should happen. Right now, we only check if the device
         // measured an acceleration of more than 16.0 m/s^2.
         if (Math.abs(vectorLength(event.values[0], event.values[1], event.values[2])) > 16.0f) {
-            // When the device is being unlocked, the ScreenOffBroadcastReceiver should first be
-            // stopped so it does not disturb the unlocking process. Afterwards, we turn it on
-            // again.
-            mSensorListenerService.stopReceiver();
-
             // There is no need to listen to the sensors while the phone is unlocked, so we
             // unregister this listener until the phone is locked again.
             mSensorManager.unregisterListener(this);
 
             if (DEBUG) Log.d(AppConstants.TAG, "Pattern match detected.");
-            // ShellUnlocker.unlock();
-            mSensorListenerService.startReceiver();
         }
     }
 

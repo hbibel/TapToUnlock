@@ -13,7 +13,7 @@ public class MainActivity extends ActionBarActivity {
     private static boolean DEBUG;
     private Button startStopServiceButton;
     private TextView serviceStatus;
-    private Intent sensorReadingServiceIntent;
+    private Intent UnlockServiceIntent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,20 +25,20 @@ public class MainActivity extends ActionBarActivity {
 
         // Initialize the button that toggles the service on or off
         serviceStatus = (TextView) findViewById(R.id.service_status);
-        serviceStatus.setText(SensorListenerService.isRunning() ? R.string.service_running : R.string.service_not_running);
-        sensorReadingServiceIntent = new Intent(this, SensorListenerService.class);
+        serviceStatus.setText(UnlockService.isRunning() ? R.string.service_running : R.string.service_not_running);
+        UnlockServiceIntent = new Intent(this, UnlockService.class);
         final Intent tapDetectionIntent = new Intent(this, TapPatternDetectorService.class);
         startStopServiceButton = (Button) findViewById(R.id.start_stop_service_button);
-        startStopServiceButton.setText(SensorListenerService.isRunning() ? R.string.stop_service : R.string.start_service);
+        startStopServiceButton.setText(UnlockService.isRunning() ? R.string.stop_service : R.string.start_service);
         startStopServiceButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (startStopServiceButton == v) {
-                    if (SensorListenerService.isRunning()) {
+                    if (UnlockService.isRunning()) {
                         try {
                             if (DEBUG) Log.d(AppConstants.TAG, "Stopping SensorListenerService.");
                             stopService(tapDetectionIntent);
-                            stopService(sensorReadingServiceIntent);
+                            stopService(UnlockServiceIntent);
                         } catch (SecurityException e) {
                             Log.e(AppConstants.TAG, "You don't have the permission to stop the service!");
                         }
@@ -47,7 +47,7 @@ public class MainActivity extends ActionBarActivity {
                     } else {
                         try {
                             startService(tapDetectionIntent);
-                            startService(sensorReadingServiceIntent);
+                            startService(UnlockServiceIntent);
                         } catch (SecurityException e) {
                             Log.e(AppConstants.TAG, "You don't have the permission to start the service!");
                         }
