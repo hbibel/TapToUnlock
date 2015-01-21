@@ -11,16 +11,76 @@ import android.util.Log;
 
 public class TapPatternDetectorService extends Service {
 
-    private static boolean DEBUG = AppConstants.DEBUG;
-    static final int MSG_UNLOCK = UnlockService.MSG_UNLOCK;
-    static final int MSG_LOCK = UnlockService.MSG_LOCK;
-    private boolean mBound;
-    private Messenger mUnlockServiceMessenger = null;
-
     /**
-     * Target we publish for clients to send messages to TapDetectorHandler.
+     * Command to get the last taps for a certain time span
+     */
+    static final int MSG_REQ_RECENT_TAPS = 1;
+    /**
+     * Command the service sends to as a response to the MSG_REQ_RECENT_TAPS command
+     */
+    static final int MSG_RESP_RECENT_TAPS = 2;
+    /**
+     * Command to subscribe to a new tapping pattern
+     */
+    static final int MSG_SUB_PATTERN = 3;
+    /**
+     * Command to notify a subscriber a matching pattern has been tapped
+     */
+    static final int MSG_PUB_PATTERN_MATCH = 4;
+    /**
+     * Target we publish for clients to send messages to TapDetectorHandler
      */
     final Messenger mMessenger = new Messenger(new TapObserverHandler());
+
+    /**
+     * Create a new message to request the recent taps detected in the given time span
+     * <p/>
+     * The time span is given by the nanoseconds from now, the following invocation will create a
+     * message to retrieve all taps that happened 5 seconds until 1 nanosecond ago:
+     * <p/>
+     * <c>TapPatternDetectorService.createRecentTapsRequestMsg(replyTo, -5000000000L, -1)</c>
+     *
+     * @param replyTo  The Messenger to reply to. Must not be <c>null</c>
+     * @param fromTime Beginning of the time span in nanoseconds from now. Must be less than <c>toTime</c>
+     * @param toTime   End of the time span in nanoseconds from now. Must be less than 0
+     * @return A message or <c>null</c> if the parameters where illegal
+     */
+    static Message createRecentTapsRequestMsg(Messenger replyTo, long fromTime, long toTime) {
+        if (replyTo == null) {
+            return null;
+        }
+        if (fromTime >= toTime || toTime > 0) {
+            return null;
+        }
+
+        // TODO: Do I need to set the sendingUid or some other message ID?
+        Long interval[] = {new Long(fromTime), new Long(toTime)};
+        Message msg = Message.obtain(null, MSG_REQ_RECENT_TAPS, interval);
+        msg.replyTo = replyTo;
+        return msg;
+    }
+
+    /**
+     * Create a new message to subscribe to a certain tap pattern
+     *
+     * @param replyTo The Messenger to reply to. Must not be <c>null</c>
+     * @param pattern The pattern to subscribe to. Must not be <c>null</c>
+     * @return A message or <c>null</c> if the parameters where illegal
+     */
+    static Message createSubscribeMsg(Messenger replyTo, TapPattern pattern) {
+        throw new UnsupportedOperationException("Not Implemented");
+    }
+
+    /**
+     * Create a new message to unsubscribe from a certain tap pattern
+     *
+     * @param replyTo The Messenger to reply to. Must not be <c>null</c>
+     * @param pattern The pattern to unsubscribe from. Must not be <c>null</c>
+     * @return A message or <c>null</c> if the parameters where illegal
+     */
+    static Message createUnsubscribeMsg(Messenger replyTo, TapPattern pattern) {
+        throw new UnsupportedOperationException("Not Implemented");
+    }
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -33,39 +93,20 @@ public class TapPatternDetectorService extends Service {
     class TapObserverHandler extends Handler {
         @Override
         public void handleMessage(Message msg) {
-            // We have not defined any messages from the UnlockService to this yet
             switch (msg.what) {
-                case MSG_UNLOCK:
-                    String pattern = msg.getData().getString("Pattern"); // Keep in mind that this does not have to be a string!
-                    // You might want to store the msg object, so you can reply later
-                    if (DEBUG) Log.d(AppConstants.TAG, "received the following message: (MSG_UNLOCK, " + pattern + ")");
+                case MSG_REQ_RECENT_TAPS:
+                    try {
+                        Message reply = Message.obtain();
+                        reply.setData(new TapPattern().toBundle());
+                        reply.what = MSG_RESP_RECENT_TAPS;
+                        msg.replyTo.send(reply);
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    }
                     break;
                 default:
                     super.handleMessage(msg);
             }
         }
     }
-
-    private void onPatternDetected() {
-        if (!mBound) {
-            if (DEBUG) Log.e(AppConstants.TAG, "Pattern detected, but the UnlockService is not running!");
-            return;
-        }
-        Message msg = Message.obtain(null, MSG_UNLOCK, 0, 0);
-        try {
-            mUnlockServiceMessenger.send(msg);
-        } catch (RemoteException e) {
-            if (DEBUG) Log.e(AppConstants.TAG, e.getMessage());
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-
-
-        return START_STICKY;
-    }
-
-
 }
