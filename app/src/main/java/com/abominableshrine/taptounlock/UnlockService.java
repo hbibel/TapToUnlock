@@ -62,7 +62,7 @@ public class UnlockService extends Service {
         instance = this;
         running = true;
 
-        //
+        // Initialize communication to the TapPatternDetectorService
         tapPatternDetectorServiceIntent = new Intent(this, TapPatternDetectorService.class);
         bindService(tapPatternDetectorServiceIntent, mUnlockServiceConnection, Context.BIND_AUTO_CREATE);
         mUnlockServiceTapPatternDetectorClient = new UnlockServiceTapPatternDetectorClient(mIBinder);
