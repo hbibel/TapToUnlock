@@ -16,6 +16,10 @@ public class AudibleFeedback {
      * @param c The context from within the object is constructed
      */
     public AudibleFeedback(Context c) {
+        /* License for the sound file: https://creativecommons.org/licenses/by/3.0/de/deed.en
+         * Source: http://soundbible.com/1139-Water-Drop-Low.html
+         * The sound has been shortened
+         */
         mp = MediaPlayer.create(c, R.raw.drop);
     }
 
