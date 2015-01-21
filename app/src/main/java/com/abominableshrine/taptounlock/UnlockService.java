@@ -27,7 +27,7 @@ public class UnlockService extends Service {
     private boolean mBound;
     private static Boolean running; // Boolean class to enable check for null
 
-    private static UnlockService instance;
+    protected static UnlockService instance;
 
     // Variables used for the communication to the TapPatternDetectorService
     private Intent tapPatternDetectorServiceIntent;
