@@ -45,6 +45,22 @@ public class UnlockService extends Service {
         }
     };
 
+    private class UnlockServiceTapPatternDetectorClient extends TapPatternDetectorClient{
+        public UnlockServiceTapPatternDetectorClient (IBinder binder) {
+            super(binder);
+        }
+
+        @Override
+        void onRecentTapsResponse(TapPattern pattern) {
+            throw new UnsupportedOperationException("Not Implemented");
+        }
+
+        @Override
+        void onPatternMatch(TapPattern pattern) {
+            throw new UnsupportedOperationException("Not Implemented");
+        }
+    }
+
     protected static final int MSG_UNLOCK = 1;
     protected static final int MSG_LOCK = 2;
 
@@ -160,7 +176,7 @@ public class UnlockService extends Service {
     }
 
     /* This BroadcastReceiver should detect when the screen of the device is turned off. If so,
- * the device has to be locked again. */
+     * the device has to be locked again. */
     public static class ScreenOffBroadcastReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
