@@ -7,11 +7,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.os.Bundle;
 import android.os.IBinder;
-import android.os.Message;
 import android.os.Messenger;
-import android.os.RemoteException;
 import android.util.Log;
 import android.view.KeyEvent;
 
@@ -21,71 +18,66 @@ import java.io.IOException;
 /**
  * The Service that can lock and unlock the device. It does so if it receives a message from
  * a client that tells it to do so.
- * As of now, it can not respond to the client.
  */
 public class UnlockService extends Service {
+    /* *****************************
+     * SECTION 1: GLOBAL VARIABLES
+     * ***************************** */
     private final static Boolean DEBUG = AppConstants.DEBUG;
-    private static UnlockService instance;
-
     private boolean mBound;
     private static Boolean running; // Boolean class to enable check for null
+
+    private static UnlockService instance;
+
+    // Variables used for the communication to the TapPatternDetectorService
+    private Intent tapPatternDetectorServiceIntent;
+    private IBinder mIBinder;
     private Messenger mUnlockServiceMessenger = null;
-    private static ScreenOffBroadcastReceiver mScreenOffBroadcastReceiver;
-    private IntentFilter screenOffFilter;
-    private final Intent tapPatternDetectorServiceIntent = new Intent(this, TapPatternDetectorService.class);
     private ServiceConnection mUnlockServiceConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
             mUnlockServiceMessenger = new Messenger(service);
             mBound = true;
+            mIBinder = mUnlockServiceMessenger.getBinder();
         }
 
         public void onServiceDisconnected(ComponentName className) {
             mUnlockServiceMessenger = null;
             mBound = false;
+            mIBinder = null;
         }
     };
+    private TapPattern mTapPattern = new TapPattern();
+    // The client class is used to enable simple communication to the TapPatternDetectorService
+    private UnlockServiceTapPatternDetectorClient mUnlockServiceTapPatternDetectorClient;
 
-    private class UnlockServiceTapPatternDetectorClient extends TapPatternDetectorClient{
-        public UnlockServiceTapPatternDetectorClient (IBinder binder) {
-            super(binder);
-        }
+    // Variables used for the ScreenOffBroadcastReceiver
+    private static ScreenOffBroadcastReceiver mScreenOffBroadcastReceiver;
+    private IntentFilter screenOffFilter;
 
-        @Override
-        void onRecentTapsResponse(TapPattern pattern) {
-            throw new UnsupportedOperationException("Not Implemented");
-        }
-
-        @Override
-        void onPatternMatch(TapPattern pattern) {
-            throw new UnsupportedOperationException("Not Implemented");
-        }
-    }
-
-    protected static final int MSG_UNLOCK = 1;
-    protected static final int MSG_LOCK = 2;
-
+    /* *****************************
+     * SECTION 2: METHODS
+     * ***************************** */
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         instance = this;
         running = true;
-        bindService(tapPatternDetectorServiceIntent, mUnlockServiceConnection, Context.BIND_AUTO_CREATE);
 
-        // initialization of the ScreenOffBroadcastReceiver
+        //
+        tapPatternDetectorServiceIntent = new Intent(this, TapPatternDetectorService.class);
+        bindService(tapPatternDetectorServiceIntent, mUnlockServiceConnection, Context.BIND_AUTO_CREATE);
+        mUnlockServiceTapPatternDetectorClient = new UnlockServiceTapPatternDetectorClient(mIBinder);
+
+        // Initialization of the ScreenOffBroadcastReceiver
         mScreenOffBroadcastReceiver = new ScreenOffBroadcastReceiver();
         screenOffFilter = new IntentFilter();
         screenOffFilter.addAction(Intent.ACTION_SCREEN_OFF);
         registerReceiver(mScreenOffBroadcastReceiver, screenOffFilter);
 
-        // Tell the TapPatternDetectorService what pattern to search for
-        Message mMessage = Message.obtain(null, MSG_UNLOCK);
-        Bundle messageData = new Bundle();
-        messageData.putString("UnlockPattern", "This could be any parcelable data type, a string or even a byte[]");
-        mMessage.setData(messageData);
-        try {
-            mUnlockServiceMessenger.send(mMessage);
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        }
+        // Some TapPattern
+        mTapPattern.appendTap(TapPattern.DeviceSide.FRONT, 1000);
+        mTapPattern.appendTap(TapPattern.DeviceSide.FRONT, 1000);
+        mTapPattern.appendTap(TapPattern.DeviceSide.FRONT, 1000);
+        mUnlockServiceTapPatternDetectorClient.subscribe(mTapPattern);
 
         return START_STICKY;
     }
@@ -175,6 +167,21 @@ public class UnlockService extends Service {
         }
     }
 
+    public void stopReceiver() {
+        unregisterReceiver(mScreenOffBroadcastReceiver);
+    }
+
+    public void startReceiver() {
+        registerReceiver(mScreenOffBroadcastReceiver, screenOffFilter);
+    }
+
+    public static boolean isRunning() {
+        return Boolean.TRUE.equals(running);
+    }
+
+    /* *****************************
+     * SECTION 3: INNER CLASSES
+     * ***************************** */
     /* This BroadcastReceiver should detect when the screen of the device is turned off. If so,
      * the device has to be locked again. */
     public static class ScreenOffBroadcastReceiver extends BroadcastReceiver {
@@ -192,16 +199,20 @@ public class UnlockService extends Service {
         }
     }
 
-    public void stopReceiver() {
-        unregisterReceiver(mScreenOffBroadcastReceiver);
-    }
+    private class UnlockServiceTapPatternDetectorClient extends TapPatternDetectorClient{
+        public UnlockServiceTapPatternDetectorClient (IBinder binder) {
+            super(binder);
+        }
 
-    public void startReceiver() {
-        registerReceiver(mScreenOffBroadcastReceiver, screenOffFilter);
-    }
+        @Override
+        void onRecentTapsResponse(TapPattern pattern) {
+            throw new UnsupportedOperationException("Not Implemented");
+        }
 
-    public static boolean isRunning() {
-        return Boolean.TRUE.equals(running);
+        @Override
+        void onPatternMatch(TapPattern pattern) {
+            unlock();
+        }
     }
 
 }
