@@ -38,12 +38,14 @@ public class UnlockService extends Service {
             mUnlockServiceMessenger = new Messenger(service);
             mBound = true;
             mIBinder = mUnlockServiceMessenger.getBinder();
+            mUnlockServiceTapPatternDetectorClient = new UnlockServiceTapPatternDetectorClient(mIBinder);
         }
 
         public void onServiceDisconnected(ComponentName className) {
             mUnlockServiceMessenger = null;
             mBound = false;
             mIBinder = null;
+            mUnlockServiceTapPatternDetectorClient = null;
         }
     };
     private TapPattern mTapPattern = new TapPattern();
@@ -65,7 +67,6 @@ public class UnlockService extends Service {
         // Initialize communication to the TapPatternDetectorService
         tapPatternDetectorServiceIntent = new Intent(this, TapPatternDetectorService.class);
         bindService(tapPatternDetectorServiceIntent, mUnlockServiceConnection, Context.BIND_AUTO_CREATE);
-        mUnlockServiceTapPatternDetectorClient = new UnlockServiceTapPatternDetectorClient(mIBinder);
 
         // Initialization of the ScreenOffBroadcastReceiver
         mScreenOffBroadcastReceiver = new ScreenOffBroadcastReceiver();
@@ -73,17 +74,12 @@ public class UnlockService extends Service {
         screenOffFilter.addAction(Intent.ACTION_SCREEN_OFF);
         registerReceiver(mScreenOffBroadcastReceiver, screenOffFilter);
 
-        // Some TapPattern
-        mTapPattern.appendTap(TapPattern.DeviceSide.FRONT, 1000);
-        mTapPattern.appendTap(TapPattern.DeviceSide.FRONT, 1000);
-        mTapPattern.appendTap(TapPattern.DeviceSide.FRONT, 1000);
-        mUnlockServiceTapPatternDetectorClient.subscribe(mTapPattern);
-
         return START_STICKY;
     }
 
     @Override
     public IBinder onBind(Intent intent) {
+        // As of now, this service can not be bound
         return null;
     }
 

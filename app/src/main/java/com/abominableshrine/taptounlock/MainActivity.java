@@ -100,6 +100,8 @@ public class MainActivity extends ActionBarActivity {
         toast.show();
     }
 
+    /* With this method we can determine whether any service is running or not, without the need to
+     * set a flag within the service. */
     private boolean isServiceRunning(Class<?> serviceClass) {
         ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
         for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
