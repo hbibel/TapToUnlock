@@ -84,7 +84,7 @@ public class UnlockService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        throw new UnsupportedOperationException("UnlockService.onBind(Intent intent) not implemented!");
+        return null;
     }
 
     @Override
@@ -175,7 +175,7 @@ public class UnlockService extends Service {
         registerReceiver(mScreenOffBroadcastReceiver, screenOffFilter);
     }
 
-    public static boolean isRunning() {
+    private static boolean isRunning() {
         return Boolean.TRUE.equals(running);
     }
 

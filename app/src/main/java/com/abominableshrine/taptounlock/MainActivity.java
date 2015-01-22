@@ -1,5 +1,7 @@
 package com.abominableshrine.taptounlock;
 
+import android.app.ActivityManager;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
@@ -7,6 +9,11 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 
 /* The UI Activity from within the user can start and stop the SensorListenerService. */
 public class MainActivity extends ActionBarActivity {
@@ -14,6 +21,7 @@ public class MainActivity extends ActionBarActivity {
     private Button startStopServiceButton;
     private TextView serviceStatus;
     private Intent UnlockServiceIntent;
+    private static Class unlockServiceClass;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,18 +31,27 @@ public class MainActivity extends ActionBarActivity {
 
         if (DEBUG) Log.d(AppConstants.TAG, "MainActivity created. Debug mode enabled.");
 
+        rootOrNot();
+
+        try {
+            unlockServiceClass = Class.forName("com.abominableshrine.taptounlock.UnlockService");
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            if(DEBUG) Log.e(AppConstants.TAG, e.toString());
+        }
+
         // Initialize the button that toggles the service on or off
         serviceStatus = (TextView) findViewById(R.id.service_status);
-        serviceStatus.setText(UnlockService.isRunning() ? R.string.service_running : R.string.service_not_running);
+        serviceStatus.setText(isServiceRunning(unlockServiceClass) ? R.string.service_running : R.string.service_not_running);
         UnlockServiceIntent = new Intent(this, UnlockService.class);
         final Intent tapDetectionIntent = new Intent(this, TapPatternDetectorService.class);
         startStopServiceButton = (Button) findViewById(R.id.start_stop_service_button);
-        startStopServiceButton.setText(UnlockService.isRunning() ? R.string.stop_service : R.string.start_service);
+        startStopServiceButton.setText(isServiceRunning(unlockServiceClass) ? R.string.stop_service : R.string.start_service);
         startStopServiceButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (startStopServiceButton == v) {
-                    if (UnlockService.isRunning()) {
+                    if (isServiceRunning(unlockServiceClass)) {
                         try {
                             if (DEBUG) Log.d(AppConstants.TAG, "Stopping SensorListenerService.");
                             stopService(tapDetectionIntent);
@@ -57,5 +74,39 @@ public class MainActivity extends ActionBarActivity {
                 }
             }
         });
+    }
+
+    /*
+     * Executes the 'which su' to determine if the device is rooted or not. If not, the 'which'
+     * command does not seem to exist, hence the comparison to "which: not found"
+     */
+    private void rootOrNot() {
+        Process localProcess;
+        String line;
+        try {
+            localProcess = Runtime.getRuntime().exec("which su");
+            BufferedReader in = new BufferedReader(new InputStreamReader(localProcess.getInputStream()));
+            line = in.readLine();
+        } catch (IOException e) {
+            Log.e(AppConstants.TAG, e.toString());
+            return;
+        }
+        if(DEBUG) Log.d(AppConstants.TAG, "Response to \'which su\' command: " + line);
+        String text = (line.equals("/system/bin/sh: which: not found") ?
+                getResources().getText(R.string.device_not_rooted).toString() :
+                getResources().getText(R.string.device_rooted).toString());
+
+        Toast toast = Toast.makeText(getApplicationContext(), text, Toast.LENGTH_LONG);
+        toast.show();
+    }
+
+    private boolean isServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
     }
 }
