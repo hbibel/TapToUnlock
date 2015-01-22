@@ -21,6 +21,18 @@ public class TapPattern {
 
     final private static String KEY_SIDES = "sides";
     final private static String KEY_PAUSES = "pauses";
+    /**
+     * The percentage the comparison duration may differ from the this duration
+     * <p/>
+     * The target duration must be within (1 - MAX_DURATION_TOLERANCE) * this.duration() and
+     * (1 + MAX_DURATION_TOLERANCE) * this.duration
+     */
+    private static final float MAX_DURATION_TOLERANCE = 0.3f;
+    /**
+     * Same as {@link #MAX_DURATION_TOLERANCE} but for the position of individual taps in the
+     * pattern
+     */
+    private static final float MAX_TAP_POSITION_TOLERANCE = 0.2f;
 
     private ArrayList<DeviceSide> sides;
     private ArrayList<Integer> pauses;
@@ -124,6 +136,51 @@ public class TapPattern {
         b.putIntArray(TapPattern.KEY_SIDES, sides);
         b.putIntegerArrayList(TapPattern.KEY_PAUSES, this.pauses);
         return b;
+    }
+
+    /**
+     * Compares if two tap patterns match each other given certain tolerance
+     * <p/>
+     * This comparison is more relaxed than {@link #equals(Object)} in the ways that timings may lie
+     * in a certain tolerance and {@link com.abominableshrine.taptounlock.TapPattern.DeviceSide#ANY}
+     * is being handled correctly.
+     *
+     * @param p The pattern to compare this against
+     * @return True if they are similar to each other; false otherwis
+     */
+    public boolean matches(TapPattern p) {
+        if (null == p) {
+            return false;
+        }
+        if (this.equals(p)) {
+            return true;
+        }
+        if (this.size() != p.size()) {
+            return false;
+        }
+
+        for (int i = 0; i < this.size(); i++) {
+            boolean isSameSide = this.sides.get(i) == p.sides.get(i);
+            if (!isSameSide) {
+                boolean isAnySide = this.sides.get(i) == DeviceSide.ANY || p.sides.get(i) == DeviceSide.ANY;
+                if (!isAnySide) {
+                    return false;
+                }
+            }
+        }
+
+        float timeScale = ((float) p.duration()) / this.duration();
+        if (Math.abs(timeScale - 1f) > MAX_DURATION_TOLERANCE) {
+            return false;
+        }
+        for (int i = 0; i < this.pauses.size(); i++) {
+            float scaledTime = (this.pauses.get(i) * timeScale);
+            float tapScale = ((float) p.pauses.get(i) / scaledTime);
+            if (Math.abs(tapScale - 1f) > MAX_TAP_POSITION_TOLERANCE) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
