@@ -17,7 +17,6 @@ public abstract class TapPatternDetectorClient {
      * @param binder The binder to use for the messaging
      */
     public TapPatternDetectorClient(IBinder binder) {
-        throw new UnsupportedOperationException("Not Implemented");
     }
 
     /**
