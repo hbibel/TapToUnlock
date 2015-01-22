@@ -190,7 +190,7 @@ public class UnlockService extends Service {
                     return;
                 }
                 Log.d(AppConstants.TAG, "Screen turned off. locking device");
-                SensorEventHandler.lockDevice();
+                UnlockService.lock();
             }
         }
     }
