@@ -32,6 +32,15 @@
             android:enabled="true"
             android:exported="true" >
         </service>
+
+        <activity
+            android:name=".RecordPatternActivity"
+            android:label="@string/title_activity_enter_pattern"
+            android:parentActivityName=".MainActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.abominableshrine.taptounlock.MainActivity" />
+        </activity>
     </application>
 
 </manifest>
