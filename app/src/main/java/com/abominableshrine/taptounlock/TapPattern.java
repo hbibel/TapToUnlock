@@ -146,7 +146,7 @@ public class TapPattern {
      * is being handled correctly.
      *
      * @param p The pattern to compare this against
-     * @return True if they are similar to each other; false otherwis
+     * @return True if they are similar to each other; false otherwise
      */
     public boolean matches(TapPattern p) {
         if (null == p) {
@@ -183,4 +183,30 @@ public class TapPattern {
         return true;
     }
 
+    /**
+     * Return the device side of a tap in the pattern
+     *
+     * @param i The index of the tap
+     * @return The device side
+     */
+    public DeviceSide getSide(int i) {
+        return this.sides.get(i);
+    }
+
+    /**
+     * Return the pause between the tap and the previous tap
+     *
+     * @param i The index of the tap
+     * @return The pause or 0 if it is the first tap
+     */
+    public long getPause(int i) {
+        // Input validation through getSide()
+        @SuppressWarnings("UnusedDeclaration") DeviceSide s = this.getSide(i);
+
+        int index = i - 1;
+        if (index < 0) {
+            return 0;
+        }
+        return this.pauses.get(index);
+    }
 }

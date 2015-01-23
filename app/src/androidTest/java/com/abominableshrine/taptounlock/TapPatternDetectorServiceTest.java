@@ -35,12 +35,14 @@ public class TapPatternDetectorServiceTest extends ServiceTestCase<TapPatternDet
         super(TapPatternDetectorService.class);
     }
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    private void setTapDetectorAndStartService() throws Exception {
+        this.setTapDetectorAndStartService(TapDetector.class);
+    }
 
+    private void setTapDetectorAndStartService(Class<? extends ITapDetector> cls) throws Exception {
         this.intent = new Intent(this.getContext(), TapPatternDetectorService.class);
-        this.startService(this.intent);
+        this.intent.putExtra(TapPatternDetectorService.KEY_TAP_DETECTOR_CLASS, cls);
+        this.getContext().startService(this.intent);
         this.getContext().bindService(this.intent, this.mConnection, Context.BIND_AUTO_CREATE);
         while (this.txMessenger == null || this.binder == null) {
             Thread.sleep(100);
@@ -52,18 +54,23 @@ public class TapPatternDetectorServiceTest extends ServiceTestCase<TapPatternDet
         if (this.binder != null) {
             this.binder.unlinkToDeath(this.deathRecipient, 0);
         }
-        this.getContext().stopService(this.intent);
+        if (null != this.intent) {
+            this.getContext().stopService(this.intent);
+        }
+        this.intent = null;
         this.binder = null;
         this.txMessenger = null;
         super.tearDown();
     }
 
-    public void testCanBindToService() throws InterruptedException {
+    public void testCanBindToService() throws Exception {
+        this.setTapDetectorAndStartService();
         assertNotNull(this.binder);
         assertEquals(0, this.deathRecipient.count);
     }
 
-    public void testCreateRecentTapRequestMsg() {
+    public void testCreateRecentTapRequestMsg() throws Exception {
+        this.setTapDetectorAndStartService();
         Messenger m = new Messenger(new Handler());
         assertNull(TapPatternDetectorService.createRecentTapsRequestMsg(m, -1000000000L, -1000000000));
         assertNull(TapPatternDetectorService.createRecentTapsRequestMsg(m, -100000000L, -1000000000));
@@ -73,7 +80,8 @@ public class TapPatternDetectorServiceTest extends ServiceTestCase<TapPatternDet
         assertNotNull(TapPatternDetectorService.createRecentTapsRequestMsg(m, -5000000000L, -1000000000));
     }
 
-    public void testGetTapsForLastSeconds() throws RemoteException, InterruptedException {
+    public void testGetTapsForLastSecondsMessage() throws Exception {
+        this.setTapDetectorAndStartService();
         final MessengerTestThread t = new MessengerTestThread();
         t.test(1000, new Runnable() {
             @Override
@@ -98,4 +106,34 @@ public class TapPatternDetectorServiceTest extends ServiceTestCase<TapPatternDet
         });
     }
 
+    public void testUsesGivenTapDetector() throws Exception {
+        final DeviceSide side = DeviceSide.LEFT;
+        final TapPattern p = new TapPattern().appendTap(side, 0);
+        MockTapDetector.pattern = p;
+        MockTapDetector.delay = 1000000000;
+        this.setTapDetectorAndStartService(MockTapDetector.class);
+
+        final MessengerTestThread t = new MessengerTestThread();
+        t.test(1000, new Runnable() {
+            @Override
+            public void run() {
+                Message m = TapPatternDetectorService.createRecentTapsRequestMsg(t.messenger, -5000000000L, -1000000);
+                try {
+                    txMessenger.send(m);
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                    fail();
+                }
+            }
+        }, new Handler.Callback() {
+            @Override
+            public boolean handleMessage(Message message) {
+                assertNotNull(message);
+                assertEquals(TapPatternDetectorService.MSG_RESP_RECENT_TAPS, message.what);
+                assertEquals(p, new TapPattern(message.getData()));
+                t.reportSuccess();
+                return false;
+            }
+        });
+    }
 }

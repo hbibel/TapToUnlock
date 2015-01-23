@@ -7,9 +7,10 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
-import android.util.Log;
 
-public class TapPatternDetectorService extends Service {
+import java.util.ArrayList;
+
+public class TapPatternDetectorService extends Service implements ITapDetector.TapObserver {
 
     /**
      * Command to get the last taps for a certain time span
@@ -27,10 +28,13 @@ public class TapPatternDetectorService extends Service {
      * Command to notify a subscriber a matching pattern has been tapped
      */
     static final int MSG_PUB_PATTERN_MATCH = 4;
+    static final String KEY_TAP_DETECTOR_CLASS = "TapDetectorClass";
     /**
      * Target we publish for clients to send messages to TapDetectorHandler
      */
     final Messenger mMessenger = new Messenger(new TapObserverHandler());
+    private ArrayList<Long> timestamps;
+    private ArrayList<DeviceSide> sides;
 
     /**
      * Create a new message to request the recent taps detected in the given time span
@@ -83,8 +87,61 @@ public class TapPatternDetectorService extends Service {
     }
 
     @Override
+    public void onCreate() {
+        super.onCreate();
+        this.timestamps = new ArrayList<>();
+        this.sides = new ArrayList<>();
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        ITapDetector detector = null;
+        if (intent.hasExtra(TapPatternDetectorService.KEY_TAP_DETECTOR_CLASS)) {
+            Class<? extends ITapDetector> detectorClass = (Class<? extends ITapDetector>) intent.getSerializableExtra(TapPatternDetectorService.KEY_TAP_DETECTOR_CLASS);
+            try {
+                detector = (ITapDetector) detectorClass.newInstance();
+            } catch (InstantiationException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+        }
+        if (null == detector) {
+            detector = new TapDetector();
+        }
+        detector.registerTapObserver(this);
+        return START_STICKY;
+    }
+
+    @Override
     public IBinder onBind(Intent intent) {
         return mMessenger.getBinder();
+    }
+
+    @Override
+    public synchronized void onTap(long timestamp, long now, DeviceSide side) {
+        this.timestamps.add(timestamp);
+        this.sides.add(side);
+    }
+
+    private synchronized Message handleRecentTapsRequest(Message req) {
+        try {
+            Long timeFrame[] = (Long[]) req.obj;
+            if (timeFrame[0] >= timeFrame[1]) {
+                return null;
+            }
+
+            TapPattern p = new TapPattern();
+            if (this.sides.size() > 0) {
+                p.appendTap(this.sides.get(0), 0);
+            }
+
+            Message reply = Message.obtain(null, MSG_RESP_RECENT_TAPS);
+            reply.setData(p.toBundle());
+            return reply;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     /**
@@ -93,19 +150,25 @@ public class TapPatternDetectorService extends Service {
     class TapObserverHandler extends Handler {
         @Override
         public void handleMessage(Message msg) {
+            Message reply;
+
+            // Call the separate handlers to get the reply
             switch (msg.what) {
                 case MSG_REQ_RECENT_TAPS:
-                    try {
-                        Message reply = Message.obtain();
-                        reply.setData(new TapPattern().toBundle());
-                        reply.what = MSG_RESP_RECENT_TAPS;
-                        msg.replyTo.send(reply);
-                    } catch (RemoteException e) {
-                        e.printStackTrace();
-                    }
+                    reply = handleRecentTapsRequest(msg);
                     break;
                 default:
+                    // If there is no handler, do nothing
                     super.handleMessage(msg);
+                    return;
+            }
+
+            if (null != reply) {
+                try {
+                    msg.replyTo.send(reply);
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
