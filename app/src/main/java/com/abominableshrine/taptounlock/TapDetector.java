@@ -38,11 +38,6 @@ public class TapDetector extends BaseTapDetector {
         this.localMaxSquareSum = Float.NEGATIVE_INFINITY;
     }
 
-    @Override
-    public void onSensorChanged(SensorEvent e) {
-        this.onSensorChanged(e.timestamp, e.sensor.getType(), e.accuracy, e.values);
-    }
-
     /**
      * Calculate the square sum of the array
      *
@@ -77,11 +72,6 @@ public class TapDetector extends BaseTapDetector {
                 this.resetLocalMax();
             }
         }
-    }
-
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int i) {
-        this.onAccuracyChanged(sensor.getType(), i);
     }
 
     @Override

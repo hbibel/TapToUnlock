@@ -1,5 +1,8 @@
 package com.abominableshrine.taptounlock;
 
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+
 import java.util.ArrayList;
 
 /**
@@ -15,6 +18,16 @@ public abstract class BaseTapDetector implements ITapDetector {
 
     public BaseTapDetector() {
         this.observers = new ArrayList<>();
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent e) {
+        this.onSensorChanged(e.timestamp, e.sensor.getType(), e.accuracy, e.values);
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int i) {
+        this.onAccuracyChanged(sensor.getType(), i);
     }
 
     /**
