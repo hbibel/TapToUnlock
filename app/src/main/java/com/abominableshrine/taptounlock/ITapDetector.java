@@ -44,6 +44,6 @@ public interface ITapDetector extends SensorEventListener {
          * @param timestamp When the tap occured
          * @param now       The current time
          */
-        public void onTap(long timestamp, long now, TapPattern.DeviceSide side);
+        public void onTap(long timestamp, long now, DeviceSide side);
     }
 }

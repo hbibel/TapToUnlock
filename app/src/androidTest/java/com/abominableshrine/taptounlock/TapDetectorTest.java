@@ -82,7 +82,7 @@ public class TapDetectorTest extends AndroidTestCase implements TapDetector.TapO
     }
 
     @Override
-    public void onTap(long timestamp, long now, TapPattern.DeviceSide side) {
+    public void onTap(long timestamp, long now, DeviceSide side) {
         this.detectedTaps.add(timestamp);
     }
 }

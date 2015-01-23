@@ -142,7 +142,7 @@ public class TapPattern {
      * Compares if two tap patterns match each other given certain tolerance
      * <p/>
      * This comparison is more relaxed than {@link #equals(Object)} in the ways that timings may lie
-     * in a certain tolerance and {@link com.abominableshrine.taptounlock.TapPattern.DeviceSide#ANY}
+     * in a certain tolerance and {@link DeviceSide#ANY}
      * is being handled correctly.
      *
      * @param p The pattern to compare this against
@@ -183,18 +183,4 @@ public class TapPattern {
         return true;
     }
 
-    /**
-     * The different sides a device can be tapped.
-     * <p/>
-     * Screen is considered to be always in the front.
-     */
-    public enum DeviceSide {
-        ANY,
-        FRONT,
-        BACK,
-        TOP,
-        BOTTOM,
-        LEFT,
-        RIGHT
-    }
 }

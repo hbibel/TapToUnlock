@@ -9,7 +9,7 @@ import java.util.ArrayList;
  * Abstract TapDetector that takes care of observer house-keeping
  * <p/>
  * TapDetection itself is not implemented, but it provides a convenient
- * {@link #notifyObservers(long, long, com.abominableshrine.taptounlock.TapPattern.DeviceSide)}
+ * {@link #notifyObservers(long, long, DeviceSide)}
  * method.
  */
 public abstract class BaseTapDetector implements ITapDetector {
@@ -31,7 +31,7 @@ public abstract class BaseTapDetector implements ITapDetector {
     }
 
     /**
-     * Call {@link com.abominableshrine.taptounlock.TapDetector.TapObserver#onTap(long, long, com.abominableshrine.taptounlock.TapPattern.DeviceSide)}
+     * Call {@link com.abominableshrine.taptounlock.TapDetector.TapObserver#onTap(long, long, DeviceSide)}
      * for all registered observers
      * <p/>
      * The arguments will be passed directly to the observers.
@@ -40,7 +40,7 @@ public abstract class BaseTapDetector implements ITapDetector {
      * @param now       The current time
      * @param side      The side of the tap
      */
-    protected void notifyObservers(long timestamp, long now, TapPattern.DeviceSide side) {
+    protected void notifyObservers(long timestamp, long now, DeviceSide side) {
         for (TapDetector.TapObserver obs : this.observers) {
             obs.onTap(timestamp, now, side);
         }

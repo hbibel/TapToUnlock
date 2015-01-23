@@ -1,7 +1,6 @@
 package com.abominableshrine.taptounlock;
 
 import android.hardware.Sensor;
-import android.hardware.SensorEvent;
 
 /**
  * Detects Taps based on sensor readings
@@ -67,7 +66,7 @@ public class TapDetector extends BaseTapDetector {
             this.localMaxWindow--;
             if (this.localMaxWindow == 0) {
                 if (this.localMaxSquareSum > MIN_TAP_SQUARE_SUM) {
-                    this.notifyObservers(this.localMaxTimestamp, timestamp, TapPattern.DeviceSide.ANY);
+                    this.notifyObservers(this.localMaxTimestamp, timestamp, DeviceSide.ANY);
                 }
                 this.resetLocalMax();
             }

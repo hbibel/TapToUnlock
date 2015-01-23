@@ -20,31 +20,31 @@ public class TapPatternTest extends TestCase {
     }
 
     public void testSingleTapPatternDuration() {
-        assertNotNull(p.appendTap(TapPattern.DeviceSide.BACK, 10));
+        assertNotNull(p.appendTap(DeviceSide.BACK, 10));
         assertEquals(1, p.size());
         assertEquals(0, p.duration());
     }
 
     public void testNullOnNegativeDuration() {
-        p.appendTap(TapPattern.DeviceSide.TOP, 10);
-        assertNull(p.appendTap(TapPattern.DeviceSide.FRONT, -1));
+        p.appendTap(DeviceSide.TOP, 10);
+        assertNull(p.appendTap(DeviceSide.FRONT, -1));
     }
 
     public void testIgnorePauseFirstTap() {
-        assertNotNull(new TapPattern().appendTap(TapPattern.DeviceSide.LEFT, 0));
-        assertNotNull(new TapPattern().appendTap(TapPattern.DeviceSide.LEFT, -20));
+        assertNotNull(new TapPattern().appendTap(DeviceSide.LEFT, 0));
+        assertNotNull(new TapPattern().appendTap(DeviceSide.LEFT, -20));
     }
 
     public void testNullOnZeroDuration() {
-        TapPattern p1 = p.appendTap(TapPattern.DeviceSide.LEFT, 10);
+        TapPattern p1 = p.appendTap(DeviceSide.LEFT, 10);
         assertNotNull(p1);
-        assertNull(p1.appendTap(TapPattern.DeviceSide.FRONT, 0));
+        assertNull(p1.appendTap(DeviceSide.FRONT, 0));
     }
 
     private void fillComplexPattern(TapPattern p) {
-        p.appendTap(TapPattern.DeviceSide.FRONT, 10)
-                .appendTap(TapPattern.DeviceSide.TOP, 10)
-                .appendTap(TapPattern.DeviceSide.BOTTOM, 10);
+        p.appendTap(DeviceSide.FRONT, 10)
+                .appendTap(DeviceSide.TOP, 10)
+                .appendTap(DeviceSide.BOTTOM, 10);
     }
 
     public void testSizeDurationLongPattern() {
@@ -55,13 +55,13 @@ public class TapPatternTest extends TestCase {
 
     public void testNotEqualsSingleAndEmptyPattern() {
         TapPattern emptyPattern = new TapPattern();
-        TapPattern singlePattern = new TapPattern().appendTap(TapPattern.DeviceSide.LEFT, 10);
+        TapPattern singlePattern = new TapPattern().appendTap(DeviceSide.LEFT, 10);
         assertFalse(emptyPattern.equals(singlePattern));
     }
 
     public void testNotEqualsDifferentSides() {
-        TapPattern rightTap = new TapPattern().appendTap(TapPattern.DeviceSide.RIGHT, 1);
-        TapPattern leftTap = new TapPattern().appendTap(TapPattern.DeviceSide.LEFT, 1);
+        TapPattern rightTap = new TapPattern().appendTap(DeviceSide.RIGHT, 1);
+        TapPattern leftTap = new TapPattern().appendTap(DeviceSide.LEFT, 1);
         assertFalse(leftTap.equals(rightTap));
     }
 
@@ -84,19 +84,19 @@ public class TapPatternTest extends TestCase {
     }
 
     public void testSingleTapBundleRoundTrip() {
-        p.appendTap(TapPattern.DeviceSide.BACK, 10);
+        p.appendTap(DeviceSide.BACK, 10);
         Bundle b = p.toBundle();
         assertEquals(p, new TapPattern(b));
     }
 
-    private TapPattern createTapPatternFromArray(long a[], TapPattern.DeviceSide side) {
+    private TapPattern createTapPatternFromArray(long a[], DeviceSide side) {
         TapPattern ret = new TapPattern();
         ret.appendTap(side, 0);
         for (long interval : a) {
             // Sanity check against careless use of tests
             assertTrue(interval < Integer.MAX_VALUE);
 
-            ret.appendTap(TapPattern.DeviceSide.BACK, (int) interval);
+            ret.appendTap(DeviceSide.BACK, (int) interval);
         }
         return ret;
     }
@@ -106,10 +106,10 @@ public class TapPatternTest extends TestCase {
     }
 
     public void testSingleTapPatternMatch() {
-        assertFalse(new TapPattern().appendTap(TapPattern.DeviceSide.BACK, 0).matches(new TapPattern()));
-        assertTrue(new TapPattern().appendTap(TapPattern.DeviceSide.BACK, 0).matches(new TapPattern().appendTap(TapPattern.DeviceSide.BACK, 0)));
-        assertTrue(new TapPattern().appendTap(TapPattern.DeviceSide.BACK, 0).matches(new TapPattern().appendTap(TapPattern.DeviceSide.ANY, 0)));
-        assertFalse(new TapPattern().appendTap(TapPattern.DeviceSide.BACK, 0).matches(new TapPattern().appendTap(TapPattern.DeviceSide.FRONT, 0)));
+        assertFalse(new TapPattern().appendTap(DeviceSide.BACK, 0).matches(new TapPattern()));
+        assertTrue(new TapPattern().appendTap(DeviceSide.BACK, 0).matches(new TapPattern().appendTap(DeviceSide.BACK, 0)));
+        assertTrue(new TapPattern().appendTap(DeviceSide.BACK, 0).matches(new TapPattern().appendTap(DeviceSide.ANY, 0)));
+        assertFalse(new TapPattern().appendTap(DeviceSide.BACK, 0).matches(new TapPattern().appendTap(DeviceSide.FRONT, 0)));
     }
 
     public void testComplexPatternMatch() {
@@ -130,23 +130,23 @@ public class TapPatternTest extends TestCase {
          * 166266085L, 146026611L, 699932969L, 171234131L, 171173096L, 704925537L, 156097412L, 161132813L
          */
         TapPattern reference = this.createTapPatternFromArray(new long[]{225158691L, 222741885L, 769665620L, 695953369L, 673431397L, 1052740898L, 206970215L, 251190185L},
-                TapPattern.DeviceSide.BACK);
+                DeviceSide.BACK);
 
         assertTrue(reference.matches(this.createTapPatternFromArray(new long[]{223968506L, 229278565L, 882171631L, 716393942L, 770782471L, 1162902832L, 244018555L, 254455566L},
-                TapPattern.DeviceSide.BACK)));
+                DeviceSide.BACK)));
         assertTrue(reference.matches(this.createTapPatternFromArray(new long[]{223968506L, 229278565L, 882171631L, 716393942L, 770782471L, 1162902832L, 244018555L, 254455566L},
-                TapPattern.DeviceSide.ANY)));
+                DeviceSide.ANY)));
         assertFalse(reference.matches(this.createTapPatternFromArray(new long[]{223968506L, 229278565L, 882171631L, 716393942L, 770782471L, 1162902832L, 244018555L, 254455566L},
-                TapPattern.DeviceSide.BOTTOM)));
+                DeviceSide.BOTTOM)));
         assertFalse(reference.matches(this.createTapPatternFromArray(new long[]{223968506L, 229278565L, 882171631L, 716393942L, 770782471L, 1162902832L, 244018555L},
-                TapPattern.DeviceSide.BACK)));
+                DeviceSide.BACK)));
 
-        assertFalse(reference.matches(this.createTapPatternFromArray(new long[]{161102294L, 151153565L, 654687604L, 433697574L, 458740234L, 1007165550L, 165161133L, 166961670L}, TapPattern.DeviceSide.BACK)));
-        assertFalse(reference.matches(this.createTapPatternFromArray(new long[]{176220766L, 161132813L, 558929443L, 166168213L, 171203613L, 584375129L, 40283203L, 125885010L}, TapPattern.DeviceSide.BACK)));
-        assertFalse(reference.matches(this.createTapPatternFromArray(new long[]{161132813L, 558929443L, 166168213L, 171203613L, 584375129L, 40283203L, 125885010L, 171325683L}, TapPattern.DeviceSide.BACK)));
-        assertFalse(reference.matches(this.createTapPatternFromArray(new long[]{558929443L, 166168213L, 171203613L, 584375129L, 40283203L, 125885010L, 171325683L, 281860352L}, TapPattern.DeviceSide.BACK)));
-        assertFalse(reference.matches(this.createTapPatternFromArray(new long[]{166168213L, 171203613L, 584375129L, 40283203L, 125885010L, 171325683L, 281860352L, 45349121L}, TapPattern.DeviceSide.BACK)));
-        assertFalse(reference.matches(this.createTapPatternFromArray(new long[]{171203613L, 584375129L, 40283203L, 125885010L, 171325683L, 281860352L, 45349121L, 171277161L}, TapPattern.DeviceSide.BACK)));
-        assertFalse(reference.matches(this.createTapPatternFromArray(new long[]{166266085L, 146026611L, 699932969L, 171234131L, 171173096L, 704925537L, 156097412L, 161132813L}, TapPattern.DeviceSide.BACK)));
+        assertFalse(reference.matches(this.createTapPatternFromArray(new long[]{161102294L, 151153565L, 654687604L, 433697574L, 458740234L, 1007165550L, 165161133L, 166961670L}, DeviceSide.BACK)));
+        assertFalse(reference.matches(this.createTapPatternFromArray(new long[]{176220766L, 161132813L, 558929443L, 166168213L, 171203613L, 584375129L, 40283203L, 125885010L}, DeviceSide.BACK)));
+        assertFalse(reference.matches(this.createTapPatternFromArray(new long[]{161132813L, 558929443L, 166168213L, 171203613L, 584375129L, 40283203L, 125885010L, 171325683L}, DeviceSide.BACK)));
+        assertFalse(reference.matches(this.createTapPatternFromArray(new long[]{558929443L, 166168213L, 171203613L, 584375129L, 40283203L, 125885010L, 171325683L, 281860352L}, DeviceSide.BACK)));
+        assertFalse(reference.matches(this.createTapPatternFromArray(new long[]{166168213L, 171203613L, 584375129L, 40283203L, 125885010L, 171325683L, 281860352L, 45349121L}, DeviceSide.BACK)));
+        assertFalse(reference.matches(this.createTapPatternFromArray(new long[]{171203613L, 584375129L, 40283203L, 125885010L, 171325683L, 281860352L, 45349121L, 171277161L}, DeviceSide.BACK)));
+        assertFalse(reference.matches(this.createTapPatternFromArray(new long[]{166266085L, 146026611L, 699932969L, 171234131L, 171173096L, 704925537L, 156097412L, 161132813L}, DeviceSide.BACK)));
     }
 }
