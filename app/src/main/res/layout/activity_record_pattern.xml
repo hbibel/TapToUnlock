@@ -14,13 +14,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/record_pattern"
-        android:id="@+id/button"
+        android:id="@+id/record_pattern_button"
         android:layout_below="@+id/textView"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="25dp" />
-
-    <com.abominableshrine.taptounlock.TouchBlockerView
-        android:id="@+id/touch_blocker_view"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent" />
 </RelativeLayout>
