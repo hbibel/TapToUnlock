@@ -20,7 +20,17 @@
         android:layout_height="wrap_content"
         android:text="@string/start_service"
         android:id="@+id/start_stop_service_button"
-        android:layout_below="@+id/service_status"
+        android:layout_below="@id/service_status"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="40dp" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/record_pattern"
+        android:id="@+id/go_to_record_pattern_activity_button"
+        android:layout_below="@id/start_stop_service_button"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="40dp"
+        android:onClick="goToRecordPatternActivity" />
 </RelativeLayout>
