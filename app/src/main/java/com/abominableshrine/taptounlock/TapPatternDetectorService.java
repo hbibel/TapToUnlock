@@ -8,8 +8,10 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.os.SystemClock;
+import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class TapPatternDetectorService extends Service implements ITapDetector.TapObserver {
 
@@ -36,6 +38,7 @@ public class TapPatternDetectorService extends Service implements ITapDetector.T
     final Messenger mMessenger = new Messenger(new TapObserverHandler());
     private ArrayList<Long> timestamps;
     private ArrayList<DeviceSide> sides;
+    private ArrayList<SubscriptionEntry> subscriptions;
 
     /**
      * Create a new message to request the recent taps detected in the given time span
@@ -73,7 +76,17 @@ public class TapPatternDetectorService extends Service implements ITapDetector.T
      * @return A message or <c>null</c> if the parameters where illegal
      */
     static Message createSubscribeMsg(Messenger replyTo, TapPattern pattern) {
-        throw new UnsupportedOperationException("Not Implemented");
+        if (null == replyTo || null == pattern) {
+            return null;
+        }
+        if (0 == pattern.size()) {
+            return null;
+        }
+
+        Message msg = Message.obtain(null, MSG_SUB_PATTERN);
+        msg.replyTo = replyTo;
+        msg.setData(pattern.toBundle());
+        return msg;
     }
 
     /**
@@ -89,16 +102,20 @@ public class TapPatternDetectorService extends Service implements ITapDetector.T
 
     @Override
     public void onCreate() {
+        logI("OnCreate");
         super.onCreate();
         this.timestamps = new ArrayList<>();
         this.sides = new ArrayList<>();
+        this.subscriptions = new ArrayList<>();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        logI("OnStartCommand");
         ITapDetector detector = null;
         if (intent.hasExtra(TapPatternDetectorService.KEY_TAP_DETECTOR_CLASS)) {
             Class<? extends ITapDetector> detectorClass = (Class<? extends ITapDetector>) intent.getSerializableExtra(TapPatternDetectorService.KEY_TAP_DETECTOR_CLASS);
+            logI("Using Detector: " + detectorClass.getName());
             try {
                 detector = (ITapDetector) detectorClass.newInstance();
             } catch (InstantiationException e) {
@@ -115,14 +132,98 @@ public class TapPatternDetectorService extends Service implements ITapDetector.T
     }
 
     @Override
+    public boolean onUnbind(Intent intent) {
+        logI("OnUnbind");
+        return super.onUnbind(intent);
+    }
+
+    @Override
     public IBinder onBind(Intent intent) {
+        logI("OnBind");
         return mMessenger.getBinder();
     }
 
     @Override
     public synchronized void onTap(long timestamp, long now, DeviceSide side) {
+        logI("OnTap: %s %d %d", side.name(), now, timestamp);
         this.timestamps.add(timestamp);
         this.sides.add(side);
+
+        this.checkSubscriptions();
+    }
+
+    /**
+     * Checks the list of subscriptions to see if we have a match with the currently recorded taps
+     */
+    private void checkSubscriptions() {
+        TapPattern p = new TapPattern();
+        for (SubscriptionEntry e : this.subscriptions) {
+            // Determine where whe should start looking for matches based on the length of a
+            // subscription
+            int i = this.timestamps.size() - e.pattern.size();
+            if (i < 0) {
+                continue;
+            }
+
+            // Build the tap pattern starting at i iff the current pattern does not match the size
+            // of the subscription. This optimization helps us to only rebuild the pattern if the
+            // subscription size has changed, and not on any iteration
+            if (e.pattern.size() != p.size()) {
+                p = new TapPattern();
+                for (; i < this.timestamps.size(); i++) {
+                    long pause = 0;
+                    if (i > 0) {
+                        pause = this.timestamps.get(i) - this.timestamps.get(i - 1);
+                    }
+                    p.appendTap(this.sides.get(i), (int) pause);
+                }
+            }
+
+            if (e.pattern.matches(p)) {
+                logI("Found match: %s %s %s", e.subscriber.toString(), e.pattern.toString(), p.toString());
+                this.notifySubscriber(e, p);
+            }
+        }
+    }
+
+    /**
+     * Notify the subscriber about a match for his subscription
+     *
+     * @param subscription The subscription that got a match
+     * @param match        The actual pattern that was matched
+     */
+    private void notifySubscriber(SubscriptionEntry subscription, TapPattern match) {
+        Message m = Message.obtain(null, MSG_PUB_PATTERN_MATCH);
+        m.setData(subscription.pattern.toBundle());
+        try {
+            subscription.subscriber.send(m);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Log an Info message
+     *
+     * @param s The message to log
+     */
+    private void logI(String s) {
+        if (AppConstants.DEBUG) {
+            Log.i(TapPatternDetectorService.class.getSimpleName(), s);
+        }
+    }
+
+    /**
+     * Log an Info message
+     *
+     * @param format The format of the message
+     * @param args   The arguments passed to the formatter
+     */
+    private void logI(String format, Object... args) {
+        if (AppConstants.DEBUG) {
+            //Log.i(TapPatternDetectorService.class.getSimpleName(), String.format(format, args));
+            logI(String.format(format, args));
+        }
     }
 
     private synchronized Message handleRecentTapsRequest(Message req) {
@@ -135,8 +236,12 @@ public class TapPatternDetectorService extends Service implements ITapDetector.T
             long now = SystemClock.elapsedRealtimeNanos();
             long minTime = now + timeFrame[0];
             long maxTime = now + timeFrame[1];
+            logI("minTime %d", minTime);
+            logI("maxTime %d", maxTime);
+
             TapPattern p = new TapPattern();
             for (int i = 0; i < this.sides.size(); i++) {
+                logI("Tap Timestamp %d", this.timestamps.get(i));
                 boolean notToOld = minTime <= this.timestamps.get(i);
                 boolean notToYoung = this.timestamps.get(i) <= maxTime;
                 if (notToOld && notToYoung) {
@@ -144,6 +249,7 @@ public class TapPatternDetectorService extends Service implements ITapDetector.T
                     if (i > 0) {
                         pause = this.timestamps.get(i) - this.timestamps.get(i - 1);
                     }
+                    logI("Appending Tap %s %d", this.sides.get(i).name(), pause);
                     p.appendTap(this.sides.get(i), (int) pause);
                 }
             }
@@ -154,6 +260,36 @@ public class TapPatternDetectorService extends Service implements ITapDetector.T
         } catch (Exception e) {
             return null;
         }
+    }
+
+    private void addSubscription(SubscriptionEntry s) {
+        logI("Adding Subscription %s", s.toString());
+        if (this.subscriptions.contains(s)) {
+            return;
+        }
+
+        this.subscriptions.add(s);
+        Collections.sort(this.subscriptions);
+    }
+
+    private synchronized Message handlePatternSubscription(Message msg) {
+        if (null == msg.replyTo || null == msg.getData()) {
+            return null;
+        }
+
+        TapPattern p = new TapPattern(msg.getData());
+        if (0 == p.size()) {
+            return null;
+        }
+
+        this.addSubscription(new SubscriptionEntry(msg.replyTo, p));
+        return null;
+    }
+
+    @Override
+    public void onDestroy() {
+        logI("OnDestroy");
+        super.onDestroy();
     }
 
     /**
@@ -169,8 +305,12 @@ public class TapPatternDetectorService extends Service implements ITapDetector.T
                 case MSG_REQ_RECENT_TAPS:
                     reply = handleRecentTapsRequest(msg);
                     break;
+                case MSG_SUB_PATTERN:
+                    reply = handlePatternSubscription(msg);
+                    break;
                 default:
                     // If there is no handler, do nothing
+                    logI("Dropping Message: %s", msg.toString());
                     super.handleMessage(msg);
                     return;
             }
@@ -182,6 +322,51 @@ public class TapPatternDetectorService extends Service implements ITapDetector.T
                     e.printStackTrace();
                 }
             }
+        }
+    }
+
+    /**
+     * A simple tuple of Subscriber and pattern to manage subscriptions
+     */
+    private class SubscriptionEntry implements Comparable<SubscriptionEntry> {
+        public Messenger subscriber;
+        public TapPattern pattern;
+
+        public SubscriptionEntry(Messenger subscriber, TapPattern pattern) {
+            this.subscriber = subscriber;
+            this.pattern = pattern;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            SubscriptionEntry that = (SubscriptionEntry) o;
+
+            if (!pattern.equals(that.pattern)) return false;
+            if (!subscriber.equals(that.subscriber)) return false;
+
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = subscriber.hashCode();
+            result = 31 * result + pattern.hashCode();
+            return result;
+        }
+
+        /**
+         * Sort descending on pattern length
+         *
+         * @param subscriptionEntry the entry to be compared.
+         * @return a positive integer, zero, or a negative integer as this pattern is less than,
+         * equal to, or greater than the specified object.
+         */
+        @Override
+        public int compareTo(SubscriptionEntry subscriptionEntry) {
+            return subscriptionEntry.pattern.size() - this.pattern.size();
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.abominableshrine.taptounlock;
 
+import android.app.ActivityManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -55,17 +56,40 @@ public class TapPatternDetectorServiceTest extends ServiceTestCase<TapPatternDet
     }
 
     @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        MockTapDetector.delay = 1000000000;
+        MockTapDetector.isAsync = true;
+        MockTapDetector.now = SystemClock.elapsedRealtimeNanos();
+    }
+
+    @Override
     protected void tearDown() throws Exception {
         if (this.binder != null) {
             this.binder.unlinkToDeath(this.deathRecipient, 0);
+            this.getContext().unbindService(this.mConnection);
         }
         if (null != this.intent) {
             this.getContext().stopService(this.intent);
         }
+        while (isServiceRunning(TapPatternDetectorService.class)) {
+            Thread.sleep(100);
+        }
+
         this.intent = null;
         this.binder = null;
         this.txMessenger = null;
         super.tearDown();
+    }
+
+    private boolean isServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) this.getContext().getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public void testCanBindToService() throws Exception {
@@ -83,6 +107,17 @@ public class TapPatternDetectorServiceTest extends ServiceTestCase<TapPatternDet
         assertNull(TapPatternDetectorService.createRecentTapsRequestMsg(m, -5000000000L, 1000000000));
         assertNull(TapPatternDetectorService.createRecentTapsRequestMsg(null, -5000000000L, -1000000000));
         assertNotNull(TapPatternDetectorService.createRecentTapsRequestMsg(m, -5000000000L, -1000000000));
+    }
+
+    public void testCreateSubscribeMsg() throws Exception {
+        this.setTapDetectorAndStartService();
+        Messenger m = new Messenger(new Handler());
+        assertNull(TapPatternDetectorService.createSubscribeMsg(null, null));
+        assertNull(TapPatternDetectorService.createSubscribeMsg(null, new TapPattern()));
+        assertNull(TapPatternDetectorService.createSubscribeMsg(null, new TapPattern().appendTap(DeviceSide.ANY, 0)));
+        assertNull(TapPatternDetectorService.createSubscribeMsg(m, null));
+        assertNull(TapPatternDetectorService.createSubscribeMsg(m, new TapPattern()));
+        assertNotNull(TapPatternDetectorService.createSubscribeMsg(m, new TapPattern().appendTap(DeviceSide.ANY, 0)));
     }
 
     public void testGetTapsForLastSecondsMessage() throws Exception {
@@ -113,8 +148,7 @@ public class TapPatternDetectorServiceTest extends ServiceTestCase<TapPatternDet
 
     public void testServiceDoesNotReturnOutdatedTaps() throws Exception {
         MockTapDetector.pattern = new TapPattern().appendTap(DeviceSide.LEFT, 0);
-        MockTapDetector.delay = 1000000000;
-        MockTapDetector.now = SystemClock.elapsedRealtimeNanos();
+        MockTapDetector.isAsync = false;
         final MessengerTestThread t = new MessengerTestThread();
 
         this.setTapDetectorAndStartService(MockTapDetector.class);
@@ -145,7 +179,7 @@ public class TapPatternDetectorServiceTest extends ServiceTestCase<TapPatternDet
         final DeviceSide side = DeviceSide.LEFT;
         final TapPattern p = new TapPattern().appendTap(side, 0);
         MockTapDetector.pattern = p;
-        MockTapDetector.delay = 1000000000;
+        MockTapDetector.isAsync = false;
         final MessengerTestThread t = new MessengerTestThread();
 
         this.setTapDetectorAndStartService(MockTapDetector.class);
@@ -166,6 +200,71 @@ public class TapPatternDetectorServiceTest extends ServiceTestCase<TapPatternDet
                 assertNotNull(message);
                 assertEquals(TapPatternDetectorService.MSG_RESP_RECENT_TAPS, message.what);
                 assertEquals(p, new TapPattern(message.getData()));
+                t.reportSuccess();
+                return false;
+            }
+        });
+    }
+
+    public void testSingleTapTapPatternSubscription() throws Exception {
+        final DeviceSide side = DeviceSide.LEFT;
+        final TapPattern p = new TapPattern().appendTap(side, 0);
+        MockTapDetector.pattern = p;
+        final MessengerTestThread t = new MessengerTestThread();
+        this.setTapDetectorAndStartService(MockTapDetector.class);
+
+        t.test(1000, new Runnable() {
+            @Override
+            public void run() {
+                Message m = TapPatternDetectorService.createSubscribeMsg(t.messenger, p);
+                try {
+                    txMessenger.send(m);
+                    MockTapDetector.sendTaps();
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                    fail();
+                }
+            }
+        }, new Handler.Callback() {
+            @Override
+            public boolean handleMessage(Message message) {
+                assertNotNull(message);
+                assertEquals(TapPatternDetectorService.MSG_PUB_PATTERN_MATCH, message.what);
+                assertEquals(p, new TapPattern(message.getData()));
+                t.reportSuccess();
+                return false;
+            }
+        });
+    }
+
+    public void testTwoSubscriptionsSameClient() throws Exception {
+        final TapPattern pattern1 = new TapPattern().appendTap(DeviceSide.LEFT, 0);
+        final TapPattern pattern2 = new TapPattern().appendTap(DeviceSide.RIGHT, 0);
+        final TapPattern sentPattern = new TapPattern().appendTap(DeviceSide.BACK, 0).appendTap(pattern1.getSide(0), 500000000);
+        MockTapDetector.pattern = sentPattern;
+        final MessengerTestThread t = new MessengerTestThread();
+        this.setTapDetectorAndStartService(MockTapDetector.class);
+
+        t.test(1000, new Runnable() {
+            @Override
+            public void run() {
+                Message sub1 = TapPatternDetectorService.createSubscribeMsg(t.messenger, pattern1);
+                Message sub2 = TapPatternDetectorService.createSubscribeMsg(t.messenger, pattern2);
+                try {
+                    txMessenger.send(sub1);
+                    txMessenger.send(sub2);
+                    MockTapDetector.sendTaps();
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                    fail();
+                }
+            }
+        }, new Handler.Callback() {
+            @Override
+            public boolean handleMessage(Message message) {
+                assertNotNull(message);
+                assertEquals(TapPatternDetectorService.MSG_PUB_PATTERN_MATCH, message.what);
+                assertEquals(pattern1, new TapPattern(message.getData()));
                 t.reportSuccess();
                 return false;
             }
