@@ -40,14 +40,14 @@ public abstract class TapPatternDetectorClient {
      *
      * @param pattern The pattern that was tapped in the given time frame
      */
-    abstract void onRecentTapsResponse(TapPattern pattern);
+    public abstract void onRecentTapsResponse(TapPattern pattern);
 
     /**
      * Callback to be implemented by users when a matching subscription has been found
      *
      * @param pattern The subscription that matched, not the actual tapped pattern
      */
-    abstract void onPatternMatch(TapPattern pattern);
+    public abstract void onPatternMatch(TapPattern pattern);
 
     /**
      * Request the recent taps detected in the given time span

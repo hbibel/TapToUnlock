@@ -86,13 +86,13 @@ public class RecordPatternActivity extends Activity {
         }
 
         @Override
-        void onRecentTapsResponse(TapPattern pattern) {
+        public void onRecentTapsResponse(TapPattern pattern) {
             if(DEBUG) Log.d(AppConstants.TAG, "Record Pattern Activity received Tap Pattern.");
             mTapPattern = pattern;
         }
 
         @Override
-        void onPatternMatch(TapPattern pattern) { // In confirming state
+        public void onPatternMatch(TapPattern pattern) { // In confirming state
             mOnClickListener.toFinalState();
         }
     }
