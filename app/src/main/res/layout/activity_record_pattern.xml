@@ -8,14 +8,46 @@
 
     <TextView android:text="@string/record_pattern_explanation" android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/textView" />
+        android:id="@+id/explanation_text" />
 
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/record_pattern"
         android:id="@+id/record_pattern_button"
-        android:layout_below="@+id/textView"
+        android:layout_below="@+id/explanation_text"
+        android:layout_centerHorizontal="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:id="@+id/recording_text"
+        android:layout_above="@+id/retry_button"
+        android:layout_marginBottom="40dp"
+        android:layout_centerHorizontal="true" />
+
+    <Button
+        android:layout_width="120dp"
+        android:layout_height="wrap_content"
+        android:text="@string/retry"
+        android:id="@+id/retry_button"
+        android:layout_above="@+id/space"
+        android:layout_alignEnd="@id/space" />
+
+    <Button
+        android:layout_width="120dp"
+        android:layout_height="wrap_content"
+        android:text="@string/proceed"
+        android:id="@+id/proceed_button"
+        android:layout_above="@+id/space"
+        android:layout_toEndOf="@id/retry_button" />
+
+    <Space
+        android:layout_width="0pt"
+        android:layout_height="0pt"
+        android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="25dp" />
+        android:id="@+id/space" />
+
 </RelativeLayout>

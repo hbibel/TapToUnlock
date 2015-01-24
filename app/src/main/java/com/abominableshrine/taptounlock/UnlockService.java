@@ -201,9 +201,7 @@ public class UnlockService extends Service {
         }
 
         @Override
-        void onRecentTapsResponse(TapPattern pattern) {
-            throw new UnsupportedOperationException("Not Implemented");
-        }
+        void onRecentTapsResponse(TapPattern pattern) {}
 
         @Override
         void onPatternMatch(TapPattern pattern) {
