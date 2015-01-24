@@ -39,6 +39,7 @@ public class MockTapDetectorTest extends TestCase implements ITapDetector.TapObs
         this.nows = new ArrayList<>();
         MockTapDetector.pattern = null;
         MockTapDetector.delay = MockTapDetectorTest.secondsToNanos(1);
+        MockTapDetector.now = MockTapDetector.delay;
         this.detector = new MockTapDetector();
     }
 
@@ -69,6 +70,7 @@ public class MockTapDetectorTest extends TestCase implements ITapDetector.TapObs
 
     public void testComplexTapPattern() {
         MockTapDetector.delay = 500;
+        MockTapDetector.now = MockTapDetector.delay;
         DeviceSide sides[] = new DeviceSide[]{DeviceSide.BACK, DeviceSide.BOTTOM, DeviceSide.FRONT};
         MockTapDetector.pattern = new TapPattern();
         for (int i = 0; i < sides.length; i++) {

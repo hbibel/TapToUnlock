@@ -16,10 +16,26 @@
 
 package com.abominableshrine.taptounlock;
 
+/**
+ * Mock TapDetector that sends a predefined pattern to observers when they subscribe
+ */
 public class MockTapDetector extends BaseTapDetector {
 
+    /**
+     * The pattern that will be sent to observers
+     */
     public static TapPattern pattern = null;
+    /**
+     * The delay that will be subtracted from the timestamp of the first tap compared to
+     * {@link #now}
+     */
     public static long delay = 1000000000;
+    /**
+     * This will be the first {@code now} value that will be sent to observers
+     * <p/>
+     * The following values will be incremented by the pauses defined in the {@link #pattern}.
+     */
+    public static long now = 1000000000;
 
     public MockTapDetector() {
         super();
@@ -37,8 +53,8 @@ public class MockTapDetector extends BaseTapDetector {
     public void registerTapObserver(TapObserver o) {
         super.registerTapObserver(o);
         if (null != pattern) {
-            long timestamp = 0;
-            long now = MockTapDetector.delay;
+            long timestamp = MockTapDetector.now - MockTapDetector.delay;
+            long now = MockTapDetector.now;
             for (int i = 0; i < MockTapDetector.pattern.size(); i++) {
                 timestamp += MockTapDetector.pattern.getPause(i);
                 now += MockTapDetector.pattern.getPause(i);
