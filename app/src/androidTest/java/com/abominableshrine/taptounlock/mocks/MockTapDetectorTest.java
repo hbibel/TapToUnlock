@@ -42,6 +42,7 @@ public class MockTapDetectorTest extends TestCase implements ITapDetector.TapObs
         this.sides = new ArrayList<>();
         this.nows = new ArrayList<>();
         MockTapDetector.pattern = null;
+        MockTapDetector.isAsync = false;
         MockTapDetector.delay = MockTapDetectorTest.secondsToNanos(1);
         MockTapDetector.now = MockTapDetector.delay;
         this.detector = new MockTapDetector();
@@ -91,5 +92,22 @@ public class MockTapDetectorTest extends TestCase implements ITapDetector.TapObs
             assertEquals(timestamp, this.timestamps.get(i).longValue());
             assertEquals(MockTapDetector.delay + timestamp, this.nows.get(i).longValue());
         }
+    }
+
+    public void testAsyncTapsFireOnlyAfterSend() {
+        DeviceSide side = DeviceSide.BACK;
+        MockTapDetector.pattern = new TapPattern().appendTap(side, 0);
+        MockTapDetector.isAsync = true;
+
+        this.detector.registerTapObserver(this);
+
+        assertEquals(0, this.timestamps.size());
+
+        MockTapDetector.sendTaps();
+
+        assertEquals(1, this.timestamps.size());
+        assertEquals(0, this.timestamps.get(0).longValue());
+        assertEquals(MockTapDetectorTest.secondsToNanos(1), this.nows.get(0).longValue());
+        assertEquals(side, this.sides.get(0));
     }
 }

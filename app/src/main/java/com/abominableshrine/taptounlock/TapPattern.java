@@ -193,6 +193,15 @@ public class TapPattern {
         return this.sides.get(i);
     }
 
+    @Override
+    public String toString() {
+        String ret = "TapPattern{";
+        for(int i = 0; i < this.size(); i++) {
+            ret += " " + this.getPause(i) + ":" + this.getSide(i);
+        }
+        return ret + " }";
+    }
+
     /**
      * Return the pause between the tap and the previous tap
      *
