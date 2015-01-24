@@ -62,6 +62,7 @@ public class RecordPatternActivity extends Activity {
 
         retryButton = (Button) findViewById(R.id.retry_button);
         retryButton.setOnClickListener(mOnClickListener);
+        retryButton.setEnabled(false);
 
         recordPatternButton = (Button) findViewById(R.id.record_pattern_button);
         recordPatternButton.setOnClickListener(mOnClickListener);
