@@ -39,9 +39,35 @@ public class MockTapDetector extends BaseTapDetector {
      * The following values will be incremented by the pauses defined in the {@link #pattern}.
      */
     public static long now = 1000000000;
+    /**
+     * Controls when the observers will be notified.
+     * <p/>
+     * If set to false they get the taps as soon as they register, if set to {@code true} only after
+     * {@link #sendTaps()} has been called.
+     */
+    public static boolean isAsync = false;
+    /**
+     * Instance used for asynchronous sending of taps
+     */
+    private static MockTapDetector instance;
 
     public MockTapDetector() {
         super();
+        MockTapDetector.instance = this;
+    }
+
+    public static void sendTaps() {
+        sendTaps(instance);
+    }
+
+    private static void sendTaps(MockTapDetector instance) {
+        long timestamp = MockTapDetector.now - MockTapDetector.delay;
+        long now = MockTapDetector.now;
+        for (int i = 0; i < MockTapDetector.pattern.size(); i++) {
+            timestamp += MockTapDetector.pattern.getPause(i);
+            now += MockTapDetector.pattern.getPause(i);
+            instance.notifyObservers(timestamp, now, MockTapDetector.pattern.getSide(i));
+        }
     }
 
     @Override
@@ -55,14 +81,8 @@ public class MockTapDetector extends BaseTapDetector {
     @Override
     public void registerTapObserver(TapObserver o) {
         super.registerTapObserver(o);
-        if (null != pattern) {
-            long timestamp = MockTapDetector.now - MockTapDetector.delay;
-            long now = MockTapDetector.now;
-            for (int i = 0; i < MockTapDetector.pattern.size(); i++) {
-                timestamp += MockTapDetector.pattern.getPause(i);
-                now += MockTapDetector.pattern.getPause(i);
-                this.notifyObservers(timestamp, now, MockTapDetector.pattern.getSide(i));
-            }
+        if (null != pattern && !isAsync) {
+            sendTaps(this);
         }
     }
 }
