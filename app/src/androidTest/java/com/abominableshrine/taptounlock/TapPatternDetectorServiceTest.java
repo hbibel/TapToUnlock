@@ -12,6 +12,10 @@ import android.os.RemoteException;
 import android.os.SystemClock;
 import android.test.ServiceTestCase;
 
+import com.abominableshrine.taptounlock.mocks.CountingDeathRecipient;
+import com.abominableshrine.taptounlock.mocks.MessengerTestThread;
+import com.abominableshrine.taptounlock.mocks.MockTapDetector;
+
 public class TapPatternDetectorServiceTest extends ServiceTestCase<TapPatternDetectorService> {
 
     private Intent intent;

@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-package com.abominableshrine.taptounlock;
+package com.abominableshrine.taptounlock.mocks;
+
+import com.abominableshrine.taptounlock.BaseTapDetector;
+import com.abominableshrine.taptounlock.TapPattern;
 
 /**
  * Mock TapDetector that sends a predefined pattern to observers when they subscribe
