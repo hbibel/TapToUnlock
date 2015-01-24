@@ -12,12 +12,17 @@ public class MainActivityTest extends ActivityInstrumentationTestCase2<MainActiv
         super(MainActivity.class);
     }
 
-    @Override
-    protected void tearDown() throws Exception {
-        if (isServiceRunning(TapPatternDetectorService.class)) {
-            Intent i = new Intent(getActivity().getApplicationContext(), TapPatternDetectorService.class);
+    private void stopServiceIfRunning(Class<?> serviceClass) {
+        if (isServiceRunning(serviceClass)) {
+            Intent i = new Intent(getActivity().getApplicationContext(), serviceClass);
             getActivity().stopService(i);
         }
+    }
+
+    @Override
+    protected void tearDown() throws Exception {
+        this.stopServiceIfRunning(UnlockService.class);
+        this.stopServiceIfRunning(TapPatternDetectorService.class);
 
         super.tearDown();
     }
