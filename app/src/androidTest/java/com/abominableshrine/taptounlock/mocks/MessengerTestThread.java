@@ -107,7 +107,7 @@ public class MessengerTestThread extends Thread {
                     Assert.fail("Timeout");
                     self.interrupt();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    // Do nothing, this is expected if the tests does not time out.
                 }
             }
         });
