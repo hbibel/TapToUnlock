@@ -2,6 +2,8 @@ package com.abominableshrine.taptounlock;
 
 import android.test.AndroidTestCase;
 
+import com.abominableshrine.taptounlock.mocks.MockCsvSensor;
+
 import java.io.InputStream;
 import java.util.ArrayList;
 

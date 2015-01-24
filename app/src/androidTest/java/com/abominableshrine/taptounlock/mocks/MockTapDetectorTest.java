@@ -14,7 +14,11 @@
  * limitations under the License.
  */
 
-package com.abominableshrine.taptounlock;
+package com.abominableshrine.taptounlock.mocks;
+
+import com.abominableshrine.taptounlock.DeviceSide;
+import com.abominableshrine.taptounlock.ITapDetector;
+import com.abominableshrine.taptounlock.TapPattern;
 
 import junit.framework.TestCase;
 
