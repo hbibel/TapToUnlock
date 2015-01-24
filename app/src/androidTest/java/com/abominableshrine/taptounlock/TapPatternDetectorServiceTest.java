@@ -9,6 +9,7 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
+import android.os.SystemClock;
 import android.test.ServiceTestCase;
 
 public class TapPatternDetectorServiceTest extends ServiceTestCase<TapPatternDetectorService> {
@@ -106,14 +107,44 @@ public class TapPatternDetectorServiceTest extends ServiceTestCase<TapPatternDet
         });
     }
 
+    public void testServiceDoesNotReturnOutdatedTaps() throws Exception {
+        MockTapDetector.pattern = new TapPattern().appendTap(DeviceSide.LEFT, 0);
+        MockTapDetector.delay = 1000000000;
+        MockTapDetector.now = SystemClock.elapsedRealtimeNanos();
+        final MessengerTestThread t = new MessengerTestThread();
+
+        this.setTapDetectorAndStartService(MockTapDetector.class);
+        t.test(1000, new Runnable() {
+            @Override
+            public void run() {
+                Message m = TapPatternDetectorService.createRecentTapsRequestMsg(t.messenger, -5000000, -1000000);
+                try {
+                    txMessenger.send(m);
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                    fail();
+                }
+            }
+        }, new Handler.Callback() {
+            @Override
+            public boolean handleMessage(Message message) {
+                assertNotNull(message);
+                assertEquals(TapPatternDetectorService.MSG_RESP_RECENT_TAPS, message.what);
+                assertEquals(new TapPattern(), new TapPattern(message.getData()));
+                t.reportSuccess();
+                return false;
+            }
+        });
+    }
+
     public void testUsesGivenTapDetector() throws Exception {
         final DeviceSide side = DeviceSide.LEFT;
         final TapPattern p = new TapPattern().appendTap(side, 0);
         MockTapDetector.pattern = p;
         MockTapDetector.delay = 1000000000;
-        this.setTapDetectorAndStartService(MockTapDetector.class);
-
         final MessengerTestThread t = new MessengerTestThread();
+
+        this.setTapDetectorAndStartService(MockTapDetector.class);
         t.test(1000, new Runnable() {
             @Override
             public void run() {

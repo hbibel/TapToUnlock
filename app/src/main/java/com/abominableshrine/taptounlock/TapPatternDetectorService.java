@@ -7,6 +7,7 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
+import android.os.SystemClock;
 
 import java.util.ArrayList;
 
@@ -131,9 +132,20 @@ public class TapPatternDetectorService extends Service implements ITapDetector.T
                 return null;
             }
 
+            long now = SystemClock.elapsedRealtimeNanos();
+            long minTime = now + timeFrame[0];
+            long maxTime = now + timeFrame[1];
             TapPattern p = new TapPattern();
-            if (this.sides.size() > 0) {
-                p.appendTap(this.sides.get(0), 0);
+            for (int i = 0; i < this.sides.size(); i++) {
+                boolean notToOld = minTime <= this.timestamps.get(i);
+                boolean notToYoung = this.timestamps.get(i) <= maxTime;
+                if (notToOld && notToYoung) {
+                    long pause = 0;
+                    if (i > 0) {
+                        pause = this.timestamps.get(i) - this.timestamps.get(i - 1);
+                    }
+                    p.appendTap(this.sides.get(i), (int) pause);
+                }
             }
 
             Message reply = Message.obtain(null, MSG_RESP_RECENT_TAPS);
