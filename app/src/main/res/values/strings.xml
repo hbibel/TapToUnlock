@@ -8,8 +8,26 @@
     <string name="service_not_running">The service is not running</string>
     <string name="start_service">Start Service</string>
     <string name="stop_service">Stop Service</string>
-    <string name="hello_world">Hello world!</string>
     <string name="device_rooted">Your device is rooted. Unlocking should work.</string>
     <string name="device_not_rooted">Your device is not rooted.</string>
+    <string name="title_activity_enter_pattern">EnterPatternActivity</string>
+    <string name="record_pattern">Record Pattern</string>
+    <string name="record_pattern_explanation">Press the \"Record Pattern\" Button
+        and tap your unlock pattern. To finish the recording, press the "Proceed" Button.</string>
+    <string name="record_pattern_second_explanation">Your unlock pattern has been recorded. Please
+        confirm it by tapping it again.</string>
+    <string name="proceed">Proceed</string>
+    <string name="retry">Retry</string>
+    <string name="finish">Set pattern</string>
+    <string name="start_over">Start Over</string>
+    <string name="recording">Recording…</string>
+    <string name="alert_dialog_pattern_missing">Pattern missing!</string>
+    <string name="record_pattern_first">Please press the \"Record Pattern\" button first and record a
+        pattern before hitting \"Proceed\"!</string>
+    <string name="pattern_confirmed_dialog">Pattern confirmed!</string>
+    <string name="set_pattern_or_not">Your pattern has been confirmed. Do you want to set it as your
+        unlock pattern now or do you want to start over and record another pattern?</string>
+    <string name="another_pattern">Another pattern</string>
+    <string name="set_pattern">Set pattern</string>
 
 </resources>

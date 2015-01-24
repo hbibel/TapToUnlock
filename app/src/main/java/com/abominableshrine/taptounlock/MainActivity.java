@@ -111,4 +111,9 @@ public class MainActivity extends ActionBarActivity {
         }
         return false;
     }
+
+    public void goToRecordPatternActivity (View v) {
+        Intent i = new Intent(this, RecordPatternActivity.class);
+        startActivity(i);
+    }
 }
