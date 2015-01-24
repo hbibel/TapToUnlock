@@ -2,6 +2,10 @@ package com.abominableshrine.taptounlock;
 
 import android.hardware.SensorEventListener;
 
+/**
+ * Interface tap detectors must implement to be plug-able to
+ * {@link com.abominableshrine.taptounlock.TapPatternDetectorService}
+ */
 public interface ITapDetector extends SensorEventListener {
     /**
      * Notify the detector about sensor changes.
@@ -15,10 +19,19 @@ public interface ITapDetector extends SensorEventListener {
      * @param senorType The type of sensor with new readings
      * @param accuracy  The accuracy of the reading
      * @param values    The readings from the sensor
+     * @see android.hardware.SensorEventListener#onSensorChanged(android.hardware.SensorEvent)
      */
     public void onSensorChanged(long timestamp, int senorType, int accuracy, float values[]);
 
-    public void onAccuracyChanged(int sensorType, int i);
+    /**
+     * Notify the detector about accuracy changes
+     *
+     * @param sensorType The type of sensor with new readings
+     * @param accuracy   The new accuracy of this sensor, one of
+     *                   {@code SensorManager.SENSOR_STATUS_*}
+     * @see android.hardware.SensorEventListener#onAccuracyChanged(android.hardware.Sensor, int)
+     */
+    public void onAccuracyChanged(int sensorType, int accuracy);
 
     /**
      * Register an observer to be notified on each detected tap
@@ -43,6 +56,7 @@ public interface ITapDetector extends SensorEventListener {
          *
          * @param timestamp When the tap occured
          * @param now       The current time
+         * @param side      The side the device has been tapped
          */
         public void onTap(long timestamp, long now, DeviceSide side);
     }
