@@ -219,8 +219,9 @@ public class TapPatternDetectorServiceTest extends ServiceTestCase<TapPatternDet
                 Message m = TapPatternDetectorService.createSubscribeMsg(t.messenger, p);
                 try {
                     txMessenger.send(m);
+                    Thread.sleep(100);
                     MockTapDetector.sendTaps();
-                } catch (RemoteException e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                     fail();
                 }
@@ -253,8 +254,9 @@ public class TapPatternDetectorServiceTest extends ServiceTestCase<TapPatternDet
                 try {
                     txMessenger.send(sub1);
                     txMessenger.send(sub2);
+                    Thread.sleep(100);
                     MockTapDetector.sendTaps();
-                } catch (RemoteException e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                     fail();
                 }
