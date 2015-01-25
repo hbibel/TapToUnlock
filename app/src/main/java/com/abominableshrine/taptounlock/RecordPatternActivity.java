@@ -8,6 +8,7 @@ import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Messenger;
+import android.os.RemoteException;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
@@ -86,13 +87,13 @@ public class RecordPatternActivity extends Activity {
         }
 
         @Override
-        void onRecentTapsResponse(TapPattern pattern) {
+        public void onRecentTapsResponse(TapPattern pattern) {
             if(DEBUG) Log.d(AppConstants.TAG, "Record Pattern Activity received Tap Pattern.");
             mTapPattern = pattern;
         }
 
         @Override
-        void onPatternMatch(TapPattern pattern) { // In confirming state
+        public void onPatternMatch(TapPattern pattern) { // In confirming state
             mOnClickListener.toFinalState();
         }
     }
@@ -109,7 +110,12 @@ public class RecordPatternActivity extends Activity {
                         toRecordingState();
                     }
                     else { // currentActivityState == ActivityState.PATTERN_RECORDED
-                        mRecordPatternActivityTapPatternDetectorClient.subscribe(mTapPattern);
+                        try {
+                            mRecordPatternActivityTapPatternDetectorClient.subscribe(mTapPattern);
+                        } catch (RemoteException e) {
+                            // TODO: Handle Exception
+                            e.printStackTrace();
+                        }
                         if(DEBUG) Log.d(AppConstants.TAG, "Waiting for pattern to be confirmed");
                         toConfirmingState();
                         // TODO: Wait until pattern time has been exceeded, then show error dialog
@@ -119,7 +125,12 @@ public class RecordPatternActivity extends Activity {
                     if (currentActivityState == ActivityState.RECORDING) {
                         // Get the recorded pattern from the TapPatternDetectorService
                         fromTime = SystemClock.elapsedRealtimeNanos() - fromTime; // Calculates the time span
-                        mRecordPatternActivityTapPatternDetectorClient.requestRecentTaps(fromTime, CUT_OFF_TIME);
+                        try {
+                            mRecordPatternActivityTapPatternDetectorClient.requestRecentTaps(fromTime, CUT_OFF_TIME);
+                        } catch (RemoteException e) {
+                            // TODO: Handle Exception
+                            e.printStackTrace();
+                        }
                         toPatternRecordedState();
                     }
                     else { // currentActivityState == ActivityState.FINAL

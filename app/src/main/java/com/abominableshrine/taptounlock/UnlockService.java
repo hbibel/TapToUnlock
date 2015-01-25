@@ -201,10 +201,10 @@ public class UnlockService extends Service {
         }
 
         @Override
-        void onRecentTapsResponse(TapPattern pattern) {}
+        public void onRecentTapsResponse(TapPattern pattern) {}
 
         @Override
-        void onPatternMatch(TapPattern pattern) {
+        public void onPatternMatch(TapPattern pattern) {
             unlock();
         }
     }
