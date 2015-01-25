@@ -1,7 +1,6 @@
 package com.abominableshrine.taptounlock;
 
-import android.app.ActivityManager;
-import android.content.Context;
+import android.app.Service;
 import android.content.Intent;
 import android.test.ActivityInstrumentationTestCase2;
 import android.widget.Button;
@@ -12,8 +11,8 @@ public class MainActivityTest extends ActivityInstrumentationTestCase2<MainActiv
         super(MainActivity.class);
     }
 
-    private void stopServiceIfRunning(Class<?> serviceClass) {
-        if (isServiceRunning(serviceClass)) {
+    private void stopServiceIfRunning(Class<? extends Service> serviceClass) {
+        if (Utils.isServiceRunning(getActivity().getApplicationContext(), TapPatternDetectorService.class)) {
             Intent i = new Intent(getActivity().getApplicationContext(), serviceClass);
             getActivity().stopService(i);
         }
@@ -27,24 +26,14 @@ public class MainActivityTest extends ActivityInstrumentationTestCase2<MainActiv
         super.tearDown();
     }
 
-    private boolean isServiceRunning(Class<?> serviceClass) {
-        ActivityManager manager = (ActivityManager) getActivity().getSystemService(Context.ACTIVITY_SERVICE);
-        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-            if (serviceClass.getName().equals(service.service.getClassName())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     public void testTapDetectionServiceOffAtStart() {
-        assertFalse(isServiceRunning(TapPatternDetectorService.class));
+        assertFalse(Utils.isServiceRunning(getActivity().getApplicationContext(), TapPatternDetectorService.class));
     }
 
     public void testTapDetectionServiceStartOnButtonPress() {
         pressServiceStartStopButton();
 
-        assertTrue(isServiceRunning(TapPatternDetectorService.class));
+        assertTrue(Utils.isServiceRunning(getActivity().getApplicationContext(), TapPatternDetectorService.class));
     }
 
     private void pressServiceStartStopButton() {
@@ -66,6 +55,6 @@ public class MainActivityTest extends ActivityInstrumentationTestCase2<MainActiv
 
         pressServiceStartStopButton();
 
-        assertFalse(isServiceRunning(TapPatternDetectorService.class));
+        assertFalse(Utils.isServiceRunning(getActivity().getApplicationContext(), TapPatternDetectorService.class));
     }
 }

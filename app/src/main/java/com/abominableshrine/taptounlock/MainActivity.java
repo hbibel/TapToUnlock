@@ -1,7 +1,5 @@
 package com.abominableshrine.taptounlock;
 
-import android.app.ActivityManager;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
@@ -42,16 +40,16 @@ public class MainActivity extends ActionBarActivity {
 
         // Initialize the button that toggles the service on or off
         serviceStatus = (TextView) findViewById(R.id.service_status);
-        serviceStatus.setText(isServiceRunning(unlockServiceClass) ? R.string.service_running : R.string.service_not_running);
+        serviceStatus.setText(Utils.isServiceRunning(getApplicationContext(), unlockServiceClass) ? R.string.service_running : R.string.service_not_running);
         UnlockServiceIntent = new Intent(this, UnlockService.class);
         final Intent tapDetectionIntent = new Intent(this, TapPatternDetectorService.class);
         startStopServiceButton = (Button) findViewById(R.id.start_stop_service_button);
-        startStopServiceButton.setText(isServiceRunning(unlockServiceClass) ? R.string.stop_service : R.string.start_service);
+        startStopServiceButton.setText(Utils.isServiceRunning(getApplicationContext(), unlockServiceClass) ? R.string.stop_service : R.string.start_service);
         startStopServiceButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (startStopServiceButton == v) {
-                    if (isServiceRunning(unlockServiceClass)) {
+                    if (Utils.isServiceRunning(getApplicationContext(), unlockServiceClass)) {
                         try {
                             if (DEBUG) Log.d(AppConstants.TAG, "Stopping SensorListenerService.");
                             stopService(tapDetectionIntent);
@@ -98,18 +96,6 @@ public class MainActivity extends ActionBarActivity {
 
         Toast toast = Toast.makeText(getApplicationContext(), text, Toast.LENGTH_LONG);
         toast.show();
-    }
-
-    /* With this method we can determine whether any service is running or not, without the need to
-     * set a flag within the service. */
-    private boolean isServiceRunning(Class<?> serviceClass) {
-        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-            if (serviceClass.getName().equals(service.service.getClassName())) {
-                return true;
-            }
-        }
-        return false;
     }
 
     public void goToRecordPatternActivity (View v) {
