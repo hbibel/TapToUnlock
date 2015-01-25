@@ -8,6 +8,7 @@ import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Messenger;
+import android.os.RemoteException;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
@@ -109,7 +110,12 @@ public class RecordPatternActivity extends Activity {
                         toRecordingState();
                     }
                     else { // currentActivityState == ActivityState.PATTERN_RECORDED
-                        mRecordPatternActivityTapPatternDetectorClient.subscribe(mTapPattern);
+                        try {
+                            mRecordPatternActivityTapPatternDetectorClient.subscribe(mTapPattern);
+                        } catch (RemoteException e) {
+                            // TODO: Handle Exception
+                            e.printStackTrace();
+                        }
                         if(DEBUG) Log.d(AppConstants.TAG, "Waiting for pattern to be confirmed");
                         toConfirmingState();
                         // TODO: Wait until pattern time has been exceeded, then show error dialog

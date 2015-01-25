@@ -16,7 +16,11 @@
 
 package com.abominableshrine.taptounlock;
 
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
+import android.os.Messenger;
+import android.os.RemoteException;
 
 /**
  * Helper class to communicate with the TapPatternDetectorService
@@ -26,6 +30,10 @@ import android.os.IBinder;
  */
 public abstract class TapPatternDetectorClient {
 
+    private IBinder binder;
+    private Messenger txMessenger;
+    private Messenger rxMessenger;
+
     /**
      * Create a new TapPatternDetectorClient to connect to the Service at the other end of the
      * binder
@@ -33,6 +41,9 @@ public abstract class TapPatternDetectorClient {
      * @param binder The binder to use for the messaging
      */
     public TapPatternDetectorClient(IBinder binder) {
+        this.binder = binder;
+        this.rxMessenger = new Messenger(new TapPatternMsgHandler());
+        this.txMessenger = new Messenger(binder);
     }
 
     /**
@@ -61,7 +72,11 @@ public abstract class TapPatternDetectorClient {
      *                 {@code toTime}
      * @param toTime   End of the time span in nanoseconds from now. Must be less than 0
      */
-    public void requestRecentTaps(long fromTime, long toTime) {
+    public void requestRecentTaps(long fromTime, long toTime) throws IllegalArgumentException {
+        if (fromTime >= toTime || toTime >= 0) {
+            throw new IllegalArgumentException();
+        }
+
         throw new UnsupportedOperationException("Not Implemented");
     }
 
@@ -70,8 +85,16 @@ public abstract class TapPatternDetectorClient {
      *
      * @param pattern The pattern to subscribe to. Must not be <c>null</c> or empty
      */
-    public void subscribe(TapPattern pattern) {
-        throw new UnsupportedOperationException("Not Implemented");
+    public void subscribe(TapPattern pattern) throws IllegalArgumentException, RemoteException {
+        if (null == pattern) {
+            throw new IllegalArgumentException();
+        }
+        if (0 == pattern.size()) {
+            throw new IllegalArgumentException();
+        }
+
+        Message m = TapPatternDetectorService.createSubscribeMsg(this.rxMessenger, pattern);
+        this.txMessenger.send(m);
     }
 
     /**
@@ -79,7 +102,22 @@ public abstract class TapPatternDetectorClient {
      *
      * @param pattern The pattern to unsubscribe from. Must not be <c>null</c> or empty
      */
-    public void unsubscribe(TapPattern pattern) {
+    public void unsubscribe(TapPattern pattern) throws IllegalArgumentException {
         throw new UnsupportedOperationException("Not Implemented");
+    }
+
+    private class TapPatternMsgHandler extends Handler {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case TapPatternDetectorService.MSG_PUB_PATTERN_MATCH:
+                case TapPatternDetectorService.MSG_RESP_RECENT_TAPS:
+                    onPatternMatch(new TapPattern(msg.getData()));
+                    break;
+                default:
+                    super.handleMessage(msg);
+                    break;
+            }
+        }
     }
 }
