@@ -24,7 +24,7 @@ public class RecordPatternActivity extends Activity {
 
     private ActivityState currentActivityState;
     private long fromTime = 0L;
-    private static final long CUT_OFF_TIME = 150000000L;
+    private static final long CUT_OFF_TIME = -150000000L;
     private TextView recordingText;
     private TextView explanationText;
     private Button proceedButton;
@@ -88,7 +88,7 @@ public class RecordPatternActivity extends Activity {
 
         @Override
         public void onRecentTapsResponse(TapPattern pattern) {
-            if(DEBUG) Log.d(AppConstants.TAG, "Record Pattern Activity received Tap Pattern.");
+            if(DEBUG) Log.d(AppConstants.TAG, "Record Pattern Activity received Tap Pattern. " + pattern);
             mTapPattern = pattern;
         }
 
@@ -124,7 +124,7 @@ public class RecordPatternActivity extends Activity {
                 case R.id.proceed_button:
                     if (currentActivityState == ActivityState.RECORDING) {
                         // Get the recorded pattern from the TapPatternDetectorService
-                        fromTime = SystemClock.elapsedRealtimeNanos() - fromTime; // Calculates the time span
+                        fromTime = fromTime - SystemClock.elapsedRealtimeNanos(); // Calculates the time span
                         try {
                             mRecordPatternActivityTapPatternDetectorClient.requestRecentTaps(fromTime, CUT_OFF_TIME);
                         } catch (RemoteException e) {
