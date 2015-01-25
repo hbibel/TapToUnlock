@@ -1,7 +1,9 @@
 package com.abominableshrine.taptounlock;
 
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
+import android.hardware.SensorManager;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
@@ -127,6 +129,8 @@ public class TapPatternDetectorService extends Service implements ITapDetector.T
             detector = new TapDetector();
         }
         detector.registerTapObserver(this);
+        detector.subscribeToSensors((SensorManager) getSystemService(Context.SENSOR_SERVICE));
+
         return START_STICKY;
     }
 
