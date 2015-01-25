@@ -57,7 +57,7 @@ public class TapPatternDetectorService extends Service implements ITapDetector.T
         if (replyTo == null) {
             return null;
         }
-        if (fromTime >= toTime || toTime > 0) {
+        if (fromTime >= toTime || toTime >= 0) {
             return null;
         }
 

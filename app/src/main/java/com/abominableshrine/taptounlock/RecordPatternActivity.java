@@ -125,7 +125,12 @@ public class RecordPatternActivity extends Activity {
                     if (currentActivityState == ActivityState.RECORDING) {
                         // Get the recorded pattern from the TapPatternDetectorService
                         fromTime = SystemClock.elapsedRealtimeNanos() - fromTime; // Calculates the time span
-                        mRecordPatternActivityTapPatternDetectorClient.requestRecentTaps(fromTime, CUT_OFF_TIME);
+                        try {
+                            mRecordPatternActivityTapPatternDetectorClient.requestRecentTaps(fromTime, CUT_OFF_TIME);
+                        } catch (RemoteException e) {
+                            // TODO: Handle Exception
+                            e.printStackTrace();
+                        }
                         toPatternRecordedState();
                     }
                     else { // currentActivityState == ActivityState.FINAL

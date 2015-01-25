@@ -115,24 +115,15 @@ public class TapPatternDetectorClientTest extends AndroidTestCase {
         return false;
     }
 
-    private void assertThrowsException(Runnable r, Class<? extends Exception> e) {
+    private void assertRequestRecentTapsThrowsException(final long fromTime, final long toTime, Class<? extends Exception> e) {
         try {
-            r.run();
+            client.requestRecentTaps(fromTime, toTime);
         } catch (Exception ex) {
             if (e.equals(ex.getClass())) {
                 return;
             }
         }
         fail();
-    }
-
-    private void assertRequestRecentTapsThrowsException(final long fromTime, final long toTime, Class<? extends Exception> e) {
-        this.assertThrowsException(new Runnable() {
-            @Override
-            public void run() {
-                client.requestRecentTaps(fromTime, toTime);
-            }
-        }, e);
     }
 
     private void assertSubscribeThrowsException(final TapPattern pattern, Class<? extends Exception> e) {
@@ -165,16 +156,11 @@ public class TapPatternDetectorClientTest extends AndroidTestCase {
 
         try {
             Thread.sleep(100);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        MockTapDetector.sendTaps();
-
-        try {
+            MockTapDetector.sendTaps();
             Thread.sleep(100);
         } catch (InterruptedException e) {
             e.printStackTrace();
+            fail();
         }
 
         assertEquals(subscription, this.client.lastMatch);

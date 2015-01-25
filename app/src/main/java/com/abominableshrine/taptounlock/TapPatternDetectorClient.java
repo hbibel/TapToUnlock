@@ -41,6 +41,9 @@ public abstract class TapPatternDetectorClient {
      * @param binder The binder to use for the messaging
      */
     public TapPatternDetectorClient(IBinder binder) {
+        if(null == binder) {
+            throw new IllegalArgumentException();
+        }
         this.binder = binder;
         this.rxMessenger = new Messenger(new TapPatternMsgHandler());
         this.txMessenger = new Messenger(binder);
@@ -72,12 +75,12 @@ public abstract class TapPatternDetectorClient {
      *                 {@code toTime}
      * @param toTime   End of the time span in nanoseconds from now. Must be less than 0
      */
-    public void requestRecentTaps(long fromTime, long toTime) throws IllegalArgumentException {
-        if (fromTime >= toTime || toTime >= 0) {
-            throw new IllegalArgumentException();
+    public void requestRecentTaps(long fromTime, long toTime) throws IllegalArgumentException, RemoteException {
+        Message m = TapPatternDetectorService.createRecentTapsRequestMsg(this.rxMessenger, fromTime, toTime);
+        if(null == m) {
+            throw new IllegalArgumentException("fromTime: " + fromTime + " toTime: " + toTime);
         }
-
-        throw new UnsupportedOperationException("Not Implemented");
+        this.txMessenger.send(m);
     }
 
     /**
@@ -110,8 +113,10 @@ public abstract class TapPatternDetectorClient {
         @Override
         public void handleMessage(Message msg) {
             switch (msg.what) {
-                case TapPatternDetectorService.MSG_PUB_PATTERN_MATCH:
                 case TapPatternDetectorService.MSG_RESP_RECENT_TAPS:
+                    onRecentTapsResponse(new TapPattern(msg.getData()));
+                    break;
+                case TapPatternDetectorService.MSG_PUB_PATTERN_MATCH:
                     onPatternMatch(new TapPattern(msg.getData()));
                     break;
                 default:
