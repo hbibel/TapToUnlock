@@ -7,7 +7,6 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
-import android.os.SystemClock;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -233,7 +232,7 @@ public class TapPatternDetectorService extends Service implements ITapDetector.T
                 return null;
             }
 
-            long now = SystemClock.elapsedRealtimeNanos();
+            long now = 1000L * System.currentTimeMillis();
             long minTime = now + timeFrame[0];
             long maxTime = now + timeFrame[1];
             logI("minTime %d", minTime);
