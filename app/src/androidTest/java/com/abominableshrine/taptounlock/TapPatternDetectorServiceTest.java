@@ -1,6 +1,5 @@
 package com.abominableshrine.taptounlock;
 
-import android.app.ActivityManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -72,7 +71,7 @@ public class TapPatternDetectorServiceTest extends ServiceTestCase<TapPatternDet
         if (null != this.intent) {
             this.getContext().stopService(this.intent);
         }
-        while (isServiceRunning(TapPatternDetectorService.class)) {
+        while (Utils.isServiceRunning(getContext(), TapPatternDetectorService.class)) {
             Thread.sleep(100);
         }
 
@@ -80,16 +79,6 @@ public class TapPatternDetectorServiceTest extends ServiceTestCase<TapPatternDet
         this.binder = null;
         this.txMessenger = null;
         super.tearDown();
-    }
-
-    private boolean isServiceRunning(Class<?> serviceClass) {
-        ActivityManager manager = (ActivityManager) this.getContext().getSystemService(Context.ACTIVITY_SERVICE);
-        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-            if (serviceClass.getName().equals(service.service.getClassName())) {
-                return true;
-            }
-        }
-        return false;
     }
 
     public void testCanBindToService() throws Exception {

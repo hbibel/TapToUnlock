@@ -16,7 +16,6 @@
 
 package com.abominableshrine.taptounlock;
 
-import android.app.ActivityManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -95,7 +94,7 @@ public class TapPatternDetectorClientTest extends AndroidTestCase {
             this.getContext().stopService(this.intent);
             this.intent = null;
         }
-        while (isServiceRunning(TapPatternDetectorService.class)) {
+        while (Utils.isServiceRunning(getContext(), TapPatternDetectorService.class)) {
             Thread.sleep(100);
         }
 
@@ -103,16 +102,6 @@ public class TapPatternDetectorClientTest extends AndroidTestCase {
         this.clientThread.interrupt();
 
         super.tearDown();
-    }
-
-    private boolean isServiceRunning(Class<?> serviceClass) {
-        ActivityManager manager = (ActivityManager) this.getContext().getSystemService(Context.ACTIVITY_SERVICE);
-        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-            if (serviceClass.getName().equals(service.service.getClassName())) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private void assertRequestRecentTapsThrowsException(final long fromTime, final long toTime, Class<? extends Exception> e) {
