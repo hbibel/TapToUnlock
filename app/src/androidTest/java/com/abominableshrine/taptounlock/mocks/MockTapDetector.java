@@ -16,6 +16,8 @@
 
 package com.abominableshrine.taptounlock.mocks;
 
+import android.hardware.SensorManager;
+
 import com.abominableshrine.taptounlock.BaseTapDetector;
 import com.abominableshrine.taptounlock.TapPattern;
 
@@ -84,5 +86,13 @@ public class MockTapDetector extends BaseTapDetector {
         if (null != pattern && !isAsync) {
             sendTaps(this);
         }
+    }
+
+    @Override
+    public void subscribeToSensors(SensorManager sensorManager) {
+    }
+
+    @Override
+    public void unsubscribeFromSensors(SensorManager sensorManager) {
     }
 }

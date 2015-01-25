@@ -1,6 +1,7 @@
 package com.abominableshrine.taptounlock;
 
 import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 
 /**
  * Interface tap detectors must implement to be plug-able to
@@ -46,6 +47,20 @@ public interface ITapDetector extends SensorEventListener {
      * @param o The observer to remove
      */
     public void removeTapObserver(TapDetector.TapObserver o);
+
+    /**
+     * Subscribe to the Sensors
+     *
+     * @param sensorManager The sensor manager to get access to the sensors
+     */
+    public void subscribeToSensors(SensorManager sensorManager);
+
+    /**
+     * Unsubscribe from the Sensors
+     *
+     * @param sensorManager The sensor manager to get access to the sensors
+     */
+    public void unsubscribeFromSensors(SensorManager sensorManager);
 
     /**
      * A simple interface to be implemented by observers if they require Tap notifications

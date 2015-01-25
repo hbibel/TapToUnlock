@@ -1,6 +1,9 @@
 package com.abominableshrine.taptounlock;
 
 import android.hardware.Sensor;
+import android.hardware.SensorManager;
+
+import java.util.List;
 
 /**
  * Detects Taps based on sensor readings
@@ -75,5 +78,18 @@ public class TapDetector extends BaseTapDetector {
 
     @Override
     public void onAccuracyChanged(int sensorType, int i) {
+    }
+
+    @Override
+    public void subscribeToSensors(SensorManager sensorManager) {
+        List<Sensor> sensors = sensorManager.getSensorList(Sensor.TYPE_LINEAR_ACCELERATION);
+        for (Sensor s : sensors) {
+            sensorManager.registerListener(this, s, SensorManager.SENSOR_DELAY_FASTEST);
+        }
+    }
+
+    @Override
+    public void unsubscribeFromSensors(SensorManager sensorManager) {
+        sensorManager.unregisterListener(this);
     }
 }
