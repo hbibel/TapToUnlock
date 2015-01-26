@@ -40,6 +40,7 @@ public class TapPatternDetectorService extends Service implements ITapDetector.T
     private ArrayList<Long> timestamps;
     private ArrayList<DeviceSide> sides;
     private ArrayList<SubscriptionEntry> subscriptions;
+    private ITapDetector detector;
 
     /**
      * Create a new message to request the recent taps detected in the given time span
@@ -113,7 +114,7 @@ public class TapPatternDetectorService extends Service implements ITapDetector.T
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         logI("OnStartCommand");
-        ITapDetector detector = null;
+        detector = null;
         if (intent.hasExtra(TapPatternDetectorService.KEY_TAP_DETECTOR_CLASS)) {
             Class<? extends ITapDetector> detectorClass = (Class<? extends ITapDetector>) intent.getSerializableExtra(TapPatternDetectorService.KEY_TAP_DETECTOR_CLASS);
             logI("Using Detector: " + detectorClass.getName());
@@ -292,6 +293,8 @@ public class TapPatternDetectorService extends Service implements ITapDetector.T
     @Override
     public void onDestroy() {
         logI("OnDestroy");
+        detector.removeTapObserver(this);
+        detector.unsubscribeFromSensors((SensorManager) getSystemService(Context.SENSOR_SERVICE));
         super.onDestroy();
     }
 
