@@ -9,7 +9,6 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
-import android.os.SystemClock;
 import android.test.ServiceTestCase;
 
 import com.abominableshrine.taptounlock.mocks.CountingDeathRecipient;
@@ -59,7 +58,7 @@ public class TapPatternDetectorServiceTest extends ServiceTestCase<TapPatternDet
         super.setUp();
         MockTapDetector.delay = 1000000000;
         MockTapDetector.isAsync = true;
-        MockTapDetector.now = SystemClock.elapsedRealtimeNanos();
+        MockTapDetector.now = System.currentTimeMillis() * 1000000L;
     }
 
     @Override
