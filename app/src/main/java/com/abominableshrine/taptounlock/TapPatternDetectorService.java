@@ -236,7 +236,7 @@ public class TapPatternDetectorService extends Service implements ITapDetector.T
                 return null;
             }
 
-            long now = 1000L * System.currentTimeMillis();
+            long now = 1000000L * System.currentTimeMillis();
             long minTime = now + timeFrame[0];
             long maxTime = now + timeFrame[1];
             logI("minTime %d", minTime);
