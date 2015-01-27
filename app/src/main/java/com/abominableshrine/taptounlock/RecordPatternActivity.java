@@ -26,6 +26,7 @@ import android.os.IBinder;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.os.SystemClock;
+import android.support.v4.app.NavUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
@@ -37,6 +38,7 @@ import android.widget.TextView;
  * State machine based UI. */
 public class RecordPatternActivity extends Activity {
     private boolean DEBUG = AppConstants.DEBUG;
+    private boolean waitingForPattern; // TODO: First implement TapPatternDetectorClient.unsubscribe(), then remove this variable
 
     private ActivityState currentActivityState;
     private long fromTime = 0L;
@@ -47,6 +49,7 @@ public class RecordPatternActivity extends Activity {
     private Button recordPatternButton;
     private Button retryButton;
     private RPAOnClickListener mOnClickListener = new RPAOnClickListener();
+    private static Class unlockServiceClass;
 
     private IBinder mIBinder;
     private Messenger mUnlockServiceMessenger = null;
@@ -150,9 +153,22 @@ public class RecordPatternActivity extends Activity {
                         toPatternRecordedState();
                     }
                     else { // currentActivityState == ActivityState.FINAL
-                        // TODO:
-                        // second pattern has been confirmed, now set it globally,
-                        // unsubscribe to it from here and go back to the MainActivity
+                        try {
+                            unlockServiceClass = Class.forName("com.abominableshrine.taptounlock.UnlockService");
+                            if (Utils.isServiceRunning(getApplicationContext(), unlockServiceClass)) {
+                                // second pattern has been confirmed, now set it globally,
+                                // unsubscribe to it from here and go back to the MainActivity
+                                UnlockService.instance.subscribeToPattern(mTapPattern);
+                                // mRecordPatternActivityTapPatternDetectorClient.unsubscribe(mTapPattern); This does not work yet. First, implement TapPatternDetectorClient.unsubscribe()
+                                NavUtils.navigateUpFromSameTask(RecordPatternActivity.this);
+                            }
+                            else {
+                                if(DEBUG) Log.e(AppConstants.TAG, "UnlockService is not running!");
+                            }
+                        } catch (ClassNotFoundException e) {
+                            e.printStackTrace();
+                            if(DEBUG) Log.e(AppConstants.TAG, e.toString());
+                        }
                     }
                     break;
                 case R.id.retry_button:
@@ -210,6 +226,8 @@ public class RecordPatternActivity extends Activity {
             retryButton.setEnabled(true);
             explanationText.setText(R.string.record_pattern_second_explanation);
             currentActivityState = ActivityState.CONFIRMING;
+
+            waitingForPattern = true;
         }
 
         private void toFinalState() {
@@ -222,6 +240,8 @@ public class RecordPatternActivity extends Activity {
             retryButton.setEnabled(true);
             explanationText.setText(R.string.set_pattern_or_not);
             currentActivityState = ActivityState.FINAL;
+
+            waitingForPattern = false;
         }
     }
 

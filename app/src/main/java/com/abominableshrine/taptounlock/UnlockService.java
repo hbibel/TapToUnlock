@@ -25,6 +25,7 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.IBinder;
 import android.os.Messenger;
+import android.os.RemoteException;
 import android.util.Log;
 import android.view.KeyEvent;
 
@@ -64,7 +65,7 @@ public class UnlockService extends Service {
             mUnlockServiceTapPatternDetectorClient = null;
         }
     };
-    private TapPattern mTapPattern = new TapPattern();
+
     // The client class is used to enable simple communication to the TapPatternDetectorService
     private UnlockServiceTapPatternDetectorClient mUnlockServiceTapPatternDetectorClient;
 
@@ -112,6 +113,14 @@ public class UnlockService extends Service {
 
         running = false;
         super.onDestroy();
+    }
+
+    protected void subscribeToPattern (TapPattern tapPattern) {
+        try {
+            mUnlockServiceTapPatternDetectorClient.subscribe(tapPattern);
+        } catch (RemoteException e) {
+            if(DEBUG) Log.e(AppConstants.TAG, e.toString());
+        }
     }
 
     /**
@@ -221,6 +230,7 @@ public class UnlockService extends Service {
 
         @Override
         public void onPatternMatch(TapPattern pattern) {
+            if(DEBUG) Log.d(AppConstants.TAG, "Received pattern match. Unlocking device now");
             unlock();
         }
     }
